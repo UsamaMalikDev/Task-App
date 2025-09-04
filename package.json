@@ -1,0 +1,43 @@
+{
+  "name": "test-be-project",
+  "version": "1.0.0",
+  "description": "Full-stack application with client, server, and worker services",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "setup": "./setup.sh",
+    "dev": "npm run build:packages && concurrently \"npm run dev:server\" \"npm run dev:worker\" \"npm run dev:client\"",
+    "dev:client": "npm run dev --workspace=apps/client",
+    "dev:server": "npm run start:dev --workspace=apps/server",
+    "dev:worker": "npm run start:dev --workspace=apps/worker",
+    "build": "npm run build:packages && npm run build:apps",
+    "build:packages": "npm run build --workspace=packages/shared-types && npm run build --workspace=packages/shared-utils",
+    "build:apps": "npm run build:server && npm run build:worker && npm run build:client",
+    "build:client": "npm run build --workspace=apps/client",
+    "build:server": "npm run build --workspace=apps/server",
+    "build:worker": "npm run build --workspace=apps/worker",
+    "start": "npm run build:packages && concurrently \"npm run start:server\" \"npm run start:worker\" \"npm run start:client\"",
+    "start:client": "npm run start --workspace=apps/client",
+    "start:server": "npm run start:prod --workspace=apps/server",
+    "start:worker": "npm run start:prod --workspace=apps/worker",
+    "clean": "npm run clean --workspaces && rm -rf apps/client/.next apps/server/dist apps/worker/dist packages/*/dist",
+    "test": "npm run test --workspaces",
+    "lint": "npm run lint --workspaces",
+    "docker:build": "docker-compose build",
+    "docker:up": "docker-compose up -d",
+    "docker:down": "docker-compose down",
+    "docker:logs": "docker-compose logs -f",
+    "docker:dev": "docker-compose -f docker-compose.yml -f docker-compose.override.yml up",
+    "docker:clean": "docker-compose down -v --remove-orphans && docker system prune -f"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=8.0.0"
+  }
+}
