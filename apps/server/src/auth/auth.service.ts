@@ -17,6 +17,7 @@ import {
   ResetPasswordDto,
   SendResetPasswordEmailDto,
 } from './dto/passwors.dto';
+import { Response } from 'express';
 
 export interface ITokenShape {
   createdOn: string;
@@ -76,6 +77,58 @@ export class AuthService {
     return `${hours > 0 ? hours + (hours === 1 ? ' hour,' : ' hours,') : ''} ${minutes > 0 ? minutes + (minutes === 1 ? ' minute' : ' minutes') : ''} ${seconds > 0 ? seconds + (seconds === 1 ? ' second' : ' seconds') : ''}`;
   }
 
+  /**
+   * Set HttpOnly cookie with JWT token
+   */
+  setAuthCookie(res: Response, token: string, maxAge: number): void {
+    res.cookie('auth_token', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: process.env.NODE_ENV === 'production' ? 'strict' : 'lax',
+      path: '/',
+      maxAge: maxAge * 1000, // Convert to milliseconds
+    });
+  }
+
+  /**
+   * Clear auth cookie
+   */
+  clearAuthCookie(res: Response): void {
+    res.clearCookie('auth_token', {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: process.env.NODE_ENV === 'production' ? 'strict' : 'lax',
+      path: '/',
+    });
+  }
+
+  /**
+   * Get user profile from JWT token
+   */
+  async getProfileFromToken(token: string): Promise<Partial<ProfileDocument>> {
+    try {
+      const payload = this.jwtService.verify(token);
+      const user = await this.profilesService.get(payload._id);
+      
+      if (!user) {
+        throw new UnauthorizedException('User not found');
+      }
+
+      return {
+        _id: user._id,
+        email: user.email,
+        roles: user.roles,
+        name: user.name,
+        avatar: user.avatar,
+        isVerified: user.isVerified,
+        disabled: user.disabled,
+        organization: user.organization,
+      };
+    } catch (error) {
+      throw new UnauthorizedException('Invalid token');
+    }
+  }
+
   async validateLogin(payload: LoginProfileDto): Promise<ProfileDocument> {
     const user = await this.profilesService.getByEmailAndPass(
       payload.email,
@@ -121,7 +174,7 @@ export class AuthService {
     return user;
   }
 
-  async login(payload: LoginProfileDto): Promise<ITokenReturnBody> {
+  async login(payload: LoginProfileDto, res: Response): Promise<{ user: Partial<ProfileDocument> }> {
     try {
       const user = await this.validateLogin(payload);
 
@@ -133,6 +186,10 @@ export class AuthService {
         roles,
       });
 
+      // Set HttpOnly cookie
+      const maxAge = Number(this.expiration);
+      this.setAuthCookie(res, backendTokens.token, maxAge);
+
       return {
         user: {
           _id,
@@ -142,12 +199,17 @@ export class AuthService {
           avatar: user.avatar,
           isVerified: user.isVerified,
           disabled: user.disabled,
+          organization: user.organization,
         },
-        backendTokens,
       };
     } catch (error) {
       throw new BadRequestException(error.message);
     }
+  }
+
+  async logout(res: Response): Promise<{ message: string }> {
+    this.clearAuthCookie(res);
+    return { message: 'Logged out successfully' };
   }
 
   async register(signupPayload: SignupPayload): Promise<ITokenShape> {

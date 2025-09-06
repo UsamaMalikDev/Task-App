@@ -89,34 +89,13 @@ export const ROUTES = {
     navigation: [],
     allowedRoles: [],
   },
-  DASHBOARD: {
-    name: 'Dashboard',
-    path: '/contractor',
-    icon: '',
-    allowedRoles: [APP_ROLES.MANAGER, APP_ROLES.CONTRACTOR, APP_ROLES.SALES],
-    navigation: [NAV_PATHS.CONTRACTOR],
-  },
   TASKS: {
     name: 'Tasks',
     path: '/tasks',
     icon: '',
-    allowedRoles: [APP_ROLES.MANAGER, APP_ROLES.CONTRACTOR, APP_ROLES.SALES, APP_ROLES.WORKER],
-    navigation: [NAV_PATHS.CONTRACTOR],
+    allowedRoles: [APP_ROLES.MANAGER, APP_ROLES.USER, APP_ROLES.ADMIN, APP_ROLES.MANAGER],
+    navigation: [NAV_PATHS.TASK],
   },
-  // PRIVACY_POLICY: {
-  //   name: 'Privacy Policy',
-  //   path: '/privacy-policy',
-  //   icon: () => null,
-  //   navigation: [],
-  //   allowedRoles: [],
-  // },
-  // TERMS_AND_CONDITION: {
-  //   name: 'Terms of Service',
-  //   path: '/terms-of-service',
-  //   icon: () => null,
-  //   navigation: [],
-  //   allowedRoles: [],
-  // },
   FORGOT_PASSWORD: {
     name: "Forgot password?",
     path: "/forgot-password",
@@ -126,9 +105,9 @@ export const ROUTES = {
   },
 };
 
-export const checkError = (data: unknown[]) => {
+export const checkError = (data:unknown[]) => {
   let error = null;
-  data.forEach((eachDataSet) => {
+  data.forEach((eachDataSet:any) => {
     if (eachDataSet?.error !== undefined) {
       error = eachDataSet.error;
     }
@@ -168,8 +147,7 @@ export const routeValidation = (
     }
   }
 
-  // Handle worker role - always redirect to hallway
-  if (auth.user.roles.includes(APP_ROLES.WORKER)) {
+  if (auth.user.roles.includes(APP_ROLES.MANAGER)) {
     const isValidRoute = isRouteValidForUser(auth, currentRoute);
     if (isValidRoute) {
       return {
@@ -179,7 +157,6 @@ export const routeValidation = (
     }
   }
 
-  // Check if route is valid for user's roles
   const isValidRoute = isRouteValidForUser(auth, currentRoute)
   if (!isValidRoute) {
     return {
@@ -196,9 +173,6 @@ export const routeValidation = (
 
 export const isProtectedRoute = (pathname: string) => {
   return (
-    pathname.startsWith('/contractor') ||
-    pathname.startsWith('/worker') ||
-    pathname.startsWith('/admin') ||
     pathname.startsWith('/tasks')
   )
 }

@@ -5,6 +5,7 @@ import { ConfigService } from 'src/common/config/config.service';
 import { ProfilesService } from 'src/profile/profile.service';
 import { JwtPayload } from './auth.types';
 import { Profile } from 'src/profile/profile.model';
+import { Request } from 'express';
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
@@ -13,7 +14,12 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     private readonly profilesService: ProfilesService,
   ) {
     super({
-      jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
+      jwtFromRequest: ExtractJwt.fromExtractors([
+        (request: Request) => {
+          return request?.cookies?.auth_token;
+        },
+        ExtractJwt.fromAuthHeaderAsBearerToken(), // Fallback for API testing
+      ]),
       ignoreExpiration: false,
       secretOrKey: configService.get('WEBTOKEN_SECRET_KEY'),
     });

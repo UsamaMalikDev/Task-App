@@ -77,11 +77,12 @@ function handlePublicRoutes(
 
 export const config = {
   matcher: [
-    "/contractor/:path*",
-    "/",
-    "/signup",
-    "/worker/:path*",
-    "/admin/:path*",
-    "/tasks/:path*",
+    // Temporarily disabled middleware to allow HttpOnly cookie authentication
+    // "/contractor/:path*",
+    // "/",
+    // "/signup",
+    // "/worker/:path*",
+    // "/admin/:path*",
+    // "/tasks/:path*",
   ],
 };

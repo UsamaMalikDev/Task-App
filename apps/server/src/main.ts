@@ -2,17 +2,24 @@ import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { AppModule } from './app/app.module';
 import { SeedService } from './seed/seed.service';
+import * as cookieParser from 'cookie-parser';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   
-  // For Security bbut for now keeping them disbaled as we are on localhost
-  // app.enableCors({
-  //   origin: process.env.FRONTEND_URL || 'http://localhost:3001',
-  //   credentials: true,
-  //   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-  //   allowedHeaders: ['Content-Type', 'Authorization'],
-  // });
+  // Set global prefix for all routes
+  app.setGlobalPrefix('api');
+  
+  // Enable CORS for frontend communication
+  app.enableCors({
+    origin: process.env.FRONTEND_URL || 'http://localhost:3001',
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+  });
+  
+  // Enable cookie parser middleware
+  app.use(cookieParser());
   
   // Global validation pipe
   app.useGlobalPipes(new ValidationPipe({
@@ -29,9 +36,14 @@ async function bootstrap() {
     next();
   });
   
-  // Seed database on startup
-  const seedService = app.get(SeedService);
-  await seedService.seedDatabase();
+  // Seed database on startup - temporarily disabled for debugging
+  // try {
+  //   const seedService = app.get(SeedService);
+  //   await seedService.seedDatabase();
+  // } catch (error) {
+  //   console.error('Seed service error:', error);
+  //   // Continue startup even if seeding fails
+  // }
   
   await app.listen(process.env.PORT ?? 3000);
 }

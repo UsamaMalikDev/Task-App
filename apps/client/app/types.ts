@@ -85,7 +85,7 @@ export type StripeSubscription = {
   subscriptionCancelled: string | null;
 };
 export type HeadersType = {
-  Authorization: string;
+  Authorization?: string;
   "Content-Type"?: string;
   "api-key"?: string;
 };

@@ -6,8 +6,8 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAppDispatch } from "../store/hooks";
 import { AuthApi } from "../lib/auth.api";
-import { checkError, setAuthCookie, accessValidation } from "../utils/helpers";
-import { setPersistedAuthData } from "../store/actions";
+import { checkError } from "../utils/helpers";
+import { setAuthUser } from "../store/slice/auth.slice";
 import { SignInPayloadType } from "../types";
 import SigninForm from "./components/SigninForm";
 
@@ -23,25 +23,26 @@ const SigninPage: React.FC = () => {
 
     try {
       setSubmitting(true);
-      const authData = await AuthApi.signIn(form);
+      console.log('Attempting login with:', form);
+      const response = await AuthApi.login(form);
+      console.log('Login response:', response);
 
-      const error = checkError([authData]);
+      const error = checkError([response]);
       if (error) {
+        console.log('Login error:', error);
         setFormError(typeof error === "string" ? error : "Sign in failed");
         return;
       }
 
-      setAuthCookie(authData);
-      dispatch(setPersistedAuthData(authData));
+      // Store user data in Redux (no localStorage)
+      console.log('Setting user in Redux:', response.user);
+      dispatch(setAuthUser(response.user));
 
-      const { redirectTo, valid } = accessValidation(authData);
-      if (!valid && redirectTo) {
-        router.push(redirectTo);
-        return;
-      }
-
+      // Redirect to tasks page
+      console.log('Redirecting to tasks page');
       router.push("/tasks");
     } catch (err) {
+      console.error('Login error:', err);
       setFormError("Something went wrong. Please try again.");
     } finally {
       setSubmitting(false);

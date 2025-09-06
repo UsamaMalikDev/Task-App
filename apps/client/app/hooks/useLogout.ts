@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation"; // Next.js App Router
 import { useDispatch } from "react-redux";
 import { removeAuthUser } from "../store/slice/auth.slice";
 import { removeProfile } from "../store/slice/profile.slice";
-import { removeAuthCookie } from "../utils/helpers";
+import { AuthApi } from "../lib/auth.api";
 
 export default function useLogout() {
   const router = useRouter();
@@ -12,17 +12,21 @@ export default function useLogout() {
 
   const handleLogout = async () => {
     try {
-      removeAuthCookie();
+      // Call logout API to clear HttpOnly cookie
+      await AuthApi.logout();
+      
+      // Clear Redux state
       dispatch(removeAuthUser());
       dispatch(removeProfile());
 
-      if (typeof window !== "undefined") {
-        localStorage.removeItem("accessToken");
-        localStorage.removeItem("refreshToken");
-      }
+      // Redirect to home page
       router.push("/");
     } catch (error) {
       console.error("Logout failed:", error);
+      // Still clear local state even if API call fails
+      dispatch(removeAuthUser());
+      dispatch(removeProfile());
+      router.push("/");
     }
   };
 

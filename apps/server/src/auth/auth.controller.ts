@@ -6,6 +6,8 @@ import {
   Param,
   Patch,
   Post,
+  Res,
+  Req,
 } from '@nestjs/common';
 import {
   ApiBadRequestResponse,
@@ -14,6 +16,7 @@ import {
   ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
+import { Response, Request } from 'express';
 
 import { AuthService, ITokenReturnBody, ITokenShape } from './auth.service';
 import { SignupPayload } from './auth.types';
@@ -32,8 +35,29 @@ export class AuthController {
   @ApiResponse({ status: HttpStatus.CREATED, description: 'Login Completed' })
   @ApiResponse({ status: HttpStatus.BAD_REQUEST, description: 'Bad Request' })
   @ApiResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Unauthorized' })
-  async login(@Body() payload: LoginProfileDto): Promise<ITokenReturnBody> {
-    return this.authService.login(payload);
+  async login(@Body() payload: LoginProfileDto, @Res() res: Response) {
+    const result = await this.authService.login(payload, res);
+    return res.status(HttpStatus.OK).json(result);
+  }
+
+  @Post('logout')
+  @ApiResponse({ status: HttpStatus.OK, description: 'Logout Completed' })
+  async logout(@Res() res: Response) {
+    const result = await this.authService.logout(res);
+    return res.status(HttpStatus.OK).json(result);
+  }
+
+  @Get('me')
+  @ApiResponse({ status: HttpStatus.OK, description: 'User profile retrieved' })
+  @ApiResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Unauthorized' })
+  async getProfile(@Req() req: Request, @Res() res: Response) {
+    const token = req.cookies?.auth_token;
+    if (!token) {
+      return res.status(HttpStatus.UNAUTHORIZED).json({ message: 'No token provided' });
+    }
+    
+    const user = await this.authService.getProfileFromToken(token);
+    return res.status(HttpStatus.OK).json({ user });
   }
 
   @Post('register')

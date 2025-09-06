@@ -29,7 +29,7 @@ import { BaseController } from 'src/common/controllers/base.controller';
 import { AuthenticatedUser } from 'src/common/types/user.types';
 import { MongoIdPipe } from 'src/common/pipes/mongo-id.pipe';
 
-@Controller('api/tasks')
+@Controller('tasks')
 @ApiTags('Tasks')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard)

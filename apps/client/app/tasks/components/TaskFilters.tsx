@@ -2,6 +2,9 @@
 import React, { useState, useEffect, useRef } from "react";
 import { TaskScope, TaskStatus, TaskPriority, TaskQueryParams } from "../../types";
 import { useDebounce } from "../../hooks/useDebounce";
+import { useAppSelector } from "../../store/hooks";
+import { selectUserRoles } from "../../store/selectors/auth.selector";
+import { APP_ROLES } from "../../utils/constants";
 
 interface TaskFiltersProps {
   scope: TaskScope;
@@ -16,6 +19,9 @@ const TaskFilters: React.FC<TaskFiltersProps> = ({
   onScopeChange,
   onFilterChange,
 }) => {
+  // Get user roles from Redux
+  const userRoles = useAppSelector(selectUserRoles);
+  
   // Local state for search input
   const [searchInput, setSearchInput] = useState(filters.search || '');
   const [isSearching, setIsSearching] = useState(false);
@@ -90,21 +96,23 @@ const TaskFilters: React.FC<TaskFiltersProps> = ({
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
         {/* Scope Toggle */}
         <div className="flex items-center space-x-4">
-         
           <div className="flex bg-gray-100 rounded-xl p-1">
-            <button
-              onClick={() => onScopeChange('my')}
-              className={`px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200 ${
-                scope === 'my'
-                  ? 'bg-white text-gray-900 shadow-sm border border-gray-200'
-                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
-              }`}
-            >
-              <svg className="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-              </svg>
-              My Created Tasks
-            </button>
+            {/* Only show "My Created Tasks" for CONTRACTOR role */}
+            {!userRoles?.includes(APP_ROLES.ADMIN) && !userRoles?.includes(APP_ROLES.MANAGER) && (
+              <button
+                onClick={() => onScopeChange('my')}
+                className={`px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200 ${
+                  scope === 'my'
+                    ? 'bg-white text-gray-900 shadow-sm border border-gray-200'
+                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                }`}
+              >
+                <svg className="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                </svg>
+                My Created Tasks
+              </button>
+            )}
             <button
               onClick={() => onScopeChange('org')}
               className={`px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200 ${

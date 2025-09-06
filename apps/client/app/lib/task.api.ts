@@ -9,31 +9,8 @@ import {
 import { HTTP_METHODS } from "../utils/constants";
 import { sendRequest } from "../utils/request-service";
 
-const API_REQUESTS = {
-  GET_TASKS: {
-    path: "/api/tasks",
-    method: HTTP_METHODS.GET,
-  },
-  CREATE_TASK: {
-    path: "/api/tasks",
-    method: HTTP_METHODS.POST,
-  },
-  UPDATE_TASK: {
-    path: "/api/tasks",
-    method: HTTP_METHODS.PATCH,
-  },
-  BULK_UPDATE_TASKS: {
-    path: "/api/tasks/bulk",
-    method: HTTP_METHODS.PATCH,
-  },
-  DELETE_TASK: {
-    path: "/api/tasks",
-    method: HTTP_METHODS.DELETE,
-  },
-};
-
 const TaskApi = {
-  getTasks: (params: TaskQueryParams = {}): Promise<TaskResponse> => {
+  getTasks: async (params: TaskQueryParams = {}): Promise<TaskResponse> => {
     const queryString = new URLSearchParams();
     
     Object.entries(params).forEach(([key, value]) => {
@@ -43,44 +20,26 @@ const TaskApi = {
     });
 
     const url = queryString.toString() 
-      ? `${API_REQUESTS.GET_TASKS.path}?${queryString.toString()}`
-      : API_REQUESTS.GET_TASKS.path;
+      ? `/api/tasks?${queryString.toString()}`
+      : '/api/tasks';
 
-    return sendRequest(
-      API_REQUESTS.GET_TASKS.method,
-      url
-    );
+    return sendRequest(HTTP_METHODS.GET, url);
   },
 
-  createTask: (payload: CreateTaskPayload): Promise<Task> => {
-    return sendRequest(
-      API_REQUESTS.CREATE_TASK.method,
-      API_REQUESTS.CREATE_TASK.path,
-      payload
-    );
+  createTask: async (payload: CreateTaskPayload): Promise<Task> => {
+    return sendRequest(HTTP_METHODS.POST, "/api/tasks", payload);
   },
 
-  updateTask: (taskId: string, payload: UpdateTaskPayload): Promise<Task> => {
-    return sendRequest(
-      API_REQUESTS.UPDATE_TASK.method,
-      `${API_REQUESTS.UPDATE_TASK.path}/${taskId}`,
-      payload
-    );
+  updateTask: async (taskId: string, payload: UpdateTaskPayload): Promise<Task> => {
+    return sendRequest(HTTP_METHODS.PATCH, `/api/tasks/${taskId}`, payload);
   },
 
-  bulkUpdateTasks: (payload: BulkUpdateTaskPayload): Promise<Task[]> => {
-    return sendRequest(
-      API_REQUESTS.BULK_UPDATE_TASKS.method,
-      API_REQUESTS.BULK_UPDATE_TASKS.path,
-      payload
-    );
+  bulkUpdateTasks: async (payload: BulkUpdateTaskPayload): Promise<Task[]> => {
+    return sendRequest(HTTP_METHODS.PATCH, "/api/tasks/bulk", payload);
   },
 
-  deleteTask: (taskId: string): Promise<{ message: string }> => {
-    return sendRequest(
-      API_REQUESTS.DELETE_TASK.method,
-      `${API_REQUESTS.DELETE_TASK.path}/${taskId}`
-    );
+  deleteTask: async (taskId: string): Promise<{ message: string }> => {
+    return sendRequest(HTTP_METHODS.DELETE, `/api/tasks/${taskId}`);
   },
 };
 

@@ -12,11 +12,9 @@ export enum PROFILE_STATUS {
 }
 
 export enum APP_ROLES {
-  CONTRACTOR = "CONTRACTOR",
+  USER = "USER",
   ADMIN = "ADMIN",
   MANAGER = "MANAGER",
-  SALES = "SALES",
-  WORKER = "WORKER",
 }
 
 export enum NOTIFY_TYPE {
@@ -27,8 +25,8 @@ export enum NOTIFY_TYPE {
 }
 
 export enum NAV_PATHS {
-  CONTRACTOR = 'CONTRACTOR',
+  USER = 'USER',
   PROFILE = 'PROFILE',
-  WORKER = 'WORKER',
-  ADMIN = 'ADMIN',
+  MANAGER = 'MANAGER',
+  TASK = 'TASK',
 }
