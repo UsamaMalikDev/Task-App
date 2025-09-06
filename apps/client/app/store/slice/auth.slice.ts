@@ -2,15 +2,15 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 
 export interface AuthState {
-  expires: string | undefined;
-  expiresPrettyPrint: string | undefined;
-  token: string | undefined;
+  expires: string;
+  expiresPrettyPrint: string;
+  token: string;
 }
 
 const initialState: AuthState = {
-  expires: undefined,
-  expiresPrettyPrint: undefined,
-  token: undefined,
+  expires: '',
+  expiresPrettyPrint: '',
+  token: '',
 };
 
 export const authSlice = createSlice({
@@ -20,7 +20,7 @@ export const authSlice = createSlice({
     setAuthUser: (state, action: PayloadAction<AuthState>) => {
       return { ...state, ...action.payload };
     },
-    removeAuthUser: (state) => {
+    removeAuthUser: () => {
       return initialState;
     },
   },

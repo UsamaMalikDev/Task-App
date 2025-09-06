@@ -53,7 +53,6 @@ const TaskApi = {
   },
 
   createTask: (payload: CreateTaskPayload): Promise<Task> => {
-    console.log("🚀 ~ payload:", payload)
     return sendRequest(
       API_REQUESTS.CREATE_TASK.method,
       API_REQUESTS.CREATE_TASK.path,

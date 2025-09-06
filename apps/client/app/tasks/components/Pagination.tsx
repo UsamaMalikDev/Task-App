@@ -27,12 +27,10 @@ const Pagination: React.FC<PaginationProps> = ({
     const maxVisiblePages = 5;
     
     if (totalPages <= maxVisiblePages) {
-      // Show all pages if total is small
       for (let i = 1; i <= totalPages; i++) {
         pages.push(i);
       }
     } else {
-      // Show pages around current page
       const start = Math.max(1, currentPage - 2);
       const end = Math.min(totalPages, currentPage + 2);
       
@@ -58,14 +56,11 @@ const Pagination: React.FC<PaginationProps> = ({
     return pages;
   };
 
-  if (totalPages <= 1) {
-    return null;
-  }
-
+  if (totalPages <= 1) return null;
+  
   return (
     <div className="flex items-center justify-between px-4 py-3 bg-white border-t border-gray-200 sm:px-6">
       <div className="flex items-center justify-between w-full">
-        {/* Items info */}
         <div className="flex items-center text-sm text-gray-700">
           <span>
             Showing <span className="font-medium">{startItem}</span> to{' '}
@@ -73,10 +68,7 @@ const Pagination: React.FC<PaginationProps> = ({
             <span className="font-medium">{totalItems}</span> results
           </span>
         </div>
-
-        {/* Pagination controls */}
         <div className="flex items-center space-x-2">
-          {/* Previous button */}
           <button
             onClick={() => onPageChange(currentPage - 1)}
             disabled={!hasPrevPage}
@@ -92,7 +84,6 @@ const Pagination: React.FC<PaginationProps> = ({
             Previous
           </button>
 
-          {/* Page numbers */}
           <div className="flex items-center space-x-1">
             {getPageNumbers().map((page, index) => (
               <React.Fragment key={index}>
@@ -113,8 +104,6 @@ const Pagination: React.FC<PaginationProps> = ({
               </React.Fragment>
             ))}
           </div>
-
-          {/* Next button */}
           <button
             onClick={() => onPageChange(currentPage + 1)}
             disabled={!hasNextPage}

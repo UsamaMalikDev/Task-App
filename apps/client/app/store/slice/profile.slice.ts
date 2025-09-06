@@ -1,7 +1,7 @@
 'use client';
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 
-interface ProfileStateInterface {
+export interface ProfileStateInterface {
   email: string;
   name: string;
   password: string;

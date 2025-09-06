@@ -22,14 +22,10 @@ const BulkActions: React.FC<BulkActionsProps> = ({
       taskIds: [], // This will be filled by the parent component
     };
 
-    if (bulkStatus) {
-      payload.status = bulkStatus as TaskStatus;
-    }
-
-    if (bulkPriority) {
-      payload.priority = bulkPriority as TaskPriority;
-    }
-
+    if (bulkStatus) payload.status = bulkStatus as TaskStatus;
+    
+    if (bulkPriority) payload.priority = bulkPriority as TaskPriority;
+    
     if (bulkStatus || bulkPriority) {
       onBulkUpdate(payload);
       setBulkStatus('');

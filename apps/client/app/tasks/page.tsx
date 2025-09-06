@@ -479,6 +479,7 @@ const TasksPage = () => {
           ) : tasks.length === 0 ? (
             <EmptyState 
               scope={scope}
+              filters={filters}
               onCreateTask={() => setShowCreateForm(true)}
             />
           ) : (

@@ -173,3 +173,16 @@ export type TaskResponse = {
 };
 
 export type TaskScope = 'my' | 'org';
+
+export interface SignupFormData {
+  name: string;
+  email: string;
+  company: string;
+  phone: string;
+  password: string;
+  confirmPassword: string;
+  source: string;
+  reason: string;
+  agreedToTerms: boolean;
+  selectedPlan: string;
+}

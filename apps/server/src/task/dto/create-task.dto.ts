@@ -47,4 +47,9 @@ export class CreateTaskDto {
   @IsArray()
   @IsString({ each: true })
   tags?: string[];
+
+  @ApiPropertyOptional({ description: 'User ID who created the task' })
+  @IsOptional()
+  @IsString()
+  createdBy?: string;
 }
