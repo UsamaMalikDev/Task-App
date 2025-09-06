@@ -1,7 +1,5 @@
 export enum APP_ROLES {
-  CONTRACTOR = 'CONTRACTOR',
   ADMIN = 'ADMIN',
   MANAGER = 'MANAGER',
-  SALES = 'SALES',
-  WORKER = 'WORKER',
+  USER = 'USER',
 }

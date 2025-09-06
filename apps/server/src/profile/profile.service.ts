@@ -91,7 +91,7 @@ export class ProfilesService {
         password,
         avatar: createAvatarURL(registerProfileDto.name),
         isVerified: PROFILE_STATUS.NONE,
-        roles: [APP_ROLES.CONTRACTOR],
+        roles: [APP_ROLES.USER],
         deleted: false,
       };
       return this.profileRepository.create(payload);
@@ -111,9 +111,7 @@ export class ProfilesService {
         profileObjectId,
       );
 
-      if (!deletedProfile) {
-        throw new NotFoundException(`Profile with ID ${profileId} not found`);
-      }
+      if (!deletedProfile) throw new NotFoundException(`Profile with ID ${profileId} not found`);
 
       return deletedProfile;
     } catch (error) {

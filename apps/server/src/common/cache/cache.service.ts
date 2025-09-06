@@ -11,9 +11,8 @@ export class CacheService {
   async get<T>(key: string): Promise<T | null> {
     try {
       const cached = this.cache.get(key);
-      if (!cached) {
-        return null;
-      }
+      if (!cached) return null;
+    
 
       if (Date.now() > cached.expires) {
         this.cache.delete(key);
@@ -53,9 +52,7 @@ export class CacheService {
       const keysToDelete: string[] = [];
 
       for (const key of this.cache.keys()) {
-        if (regex.test(key)) {
-          keysToDelete.push(key);
-        }
+        if (regex.test(key)) keysToDelete.push(key); 
       }
 
       keysToDelete.forEach(key => this.cache.delete(key));
@@ -74,7 +71,7 @@ export class CacheService {
     }
   }
 
-  generateTaskCacheKey(organization: string, query: any): string {
+  generateTaskCacheKey(organization: string, query: unknown): string {
     const queryString = JSON.stringify(query);
     return `tasks:${organization}:${Buffer.from(queryString).toString('base64')}`;
   }

@@ -15,21 +15,21 @@ import { PROFILE_STATUS } from 'src/utils/constants';
 
 export class CreateProfileDto extends BaseModel {
   @ApiProperty({
-    required: true,
+    required: true, type: String, example: 'user@example.com'
   })
   @IsEmail()
   @IsNotEmpty()
   email: string;
 
   @ApiProperty({
-    required: true,
+    required: true, type: String, example: 'Usama'
   })
   @Matches(/^[a-zA-Z ]+$/)
   @IsNotEmpty()
   name: string;
 
   @ApiProperty({
-    required: false,
+    required: false, type: String, example: 'https://ui-avatars.com/api/?name=Usama'
   })
   @IsOptional()
   avatar: string;
@@ -52,7 +52,7 @@ export class CreateProfileDto extends BaseModel {
     required: true,
     enum: APP_ROLES,
     type: [String],
-    example: APP_ROLES.CONTRACTOR,
+    example: APP_ROLES.USER,
   })
   roles: APP_ROLES[];
 

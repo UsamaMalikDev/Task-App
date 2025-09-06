@@ -64,7 +64,7 @@ export class Task extends BaseModel {
 
 export const TaskModel = SchemaFactory.createForClass(Task);
 
-// Indexes for better query performance
+// Indexes for better  performance
 TaskModel.index({ organization: 1, status: 1 });
 TaskModel.index({ organization: 1, dueDate: 1 });
 TaskModel.index({ organization: 1, createdBy: 1 });

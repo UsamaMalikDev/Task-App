@@ -107,9 +107,10 @@ export class AuthService {
       return getUserByEmail;
     }
 
-    if (user.isVerified !== PROFILE_STATUS.ACTIVE) {
-      throw new UnauthorizedException('Email is not verified');
-    }
+    //jut for now removed this functionality for email verification
+    // if (user.isVerified !== PROFILE_STATUS.ACTIVE) {
+    //   throw new UnauthorizedException('Email is not verified');
+    // }
 
     if (user.disabled) {
       throw new BadRequestException(

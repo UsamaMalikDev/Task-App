@@ -32,9 +32,7 @@ export class ConfigService {
       allowUnknown: true,
     });
 
-    if (error) {
-      throw new Error(`Config validation error: ${error.message}`);
-    }
+    if (error) throw new Error(`Config validation error: ${error.message}`);
 
     return validatedEnvConfig;
   }

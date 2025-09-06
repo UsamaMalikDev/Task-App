@@ -9,8 +9,7 @@ import {
   Query,
   HttpStatus,
   UseGuards,
-  Request,
-  UnauthorizedException,
+  ForbiddenException,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -25,15 +24,19 @@ import { UpdateTaskDto } from './dto/update-task.dto';
 import { BulkUpdateTaskDto } from './dto/bulk-update-task.dto';
 import { TaskQueryDto } from './dto/task-query.dto';
 import { JwtAuthGuard } from 'src/auth/decorators/jwt-auth.guard';
-import { Profile } from 'src/auth/decorators/profile.decorator';
 import { User } from 'src/auth/decorators/user.decorator';
+import { BaseController } from 'src/common/controllers/base.controller';
+import { AuthenticatedUser } from 'src/common/types/user.types';
+import { MongoIdPipe } from 'src/common/pipes/mongo-id.pipe';
 
 @Controller('api/tasks')
 @ApiTags('Tasks')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard)
-export class TaskController {
-  constructor(private readonly taskService: TaskService) {}
+export class TaskController extends BaseController {
+  constructor(private readonly taskService: TaskService) {
+    super();
+  }
 
   @Get()
   @ApiOperation({ summary: 'Get tasks with cursor pagination, filtering, and search' })
@@ -52,15 +55,9 @@ export class TaskController {
   @ApiQuery({ name: 'sortOrder', required: false, description: 'Sort order' })
   async getTasks(
     @Query() query: TaskQueryDto,
-    @User() user: any,
+    @User() user: AuthenticatedUser,
   ) {
-    if (!user || !user._id) {
-      throw new UnauthorizedException('User not authenticated');
-    }
-    
-    const userId = user._id;
-    const userRoles = user.roles || [];
-    const organization = user.organization || userId; // Use user's organization, fallback to userId
+    const { userId, userRoles, organization } = this.extractUserContext(user);
     
     return this.taskService.getTasksWithRBAC(organization, query, userId, userRoles);
   }
@@ -72,14 +69,9 @@ export class TaskController {
   @ApiResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Unauthorized' })
   async createTask(
     @Body() createTaskDto: CreateTaskDto,
-    @User() user: any,
+    @User() user: AuthenticatedUser,
   ) {
-    if (!user || !user._id) {
-      throw new UnauthorizedException('User not authenticated');
-    }
-    
-    const userId = user._id;
-    const organization = user.organization || userId;
+    const { userId, organization } = this.extractUserContext(user);
     return this.taskService.createTask(createTaskDto, organization, userId);
   }
 
@@ -90,15 +82,9 @@ export class TaskController {
   @ApiResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Unauthorized' })
   async bulkUpdateTasks(
     @Body() bulkUpdateDto: BulkUpdateTaskDto,
-    @User() user: any,
+    @User() user: AuthenticatedUser,
   ) {
-    if (!user || !user._id) {
-      throw new UnauthorizedException('User not authenticated');
-    }
-    
-    const userId = user._id;
-    const userRoles = user.roles || [];
-    const organization = user.organization || userId;
+    const { userId, userRoles, organization } = this.extractUserContext(user);
     return this.taskService.bulkUpdateTasksWithRBAC(bulkUpdateDto, userId, userRoles, organization);
   }
 
@@ -110,43 +96,36 @@ export class TaskController {
   @ApiResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Unauthorized' })
   @ApiResponse({ status: HttpStatus.FORBIDDEN, description: 'Forbidden - insufficient permissions' })
   async updateTask(
-    @Param('id') id: string,
+    @Param('id', MongoIdPipe) id: string,
     @Body() updateTaskDto: UpdateTaskDto,
-    @User() user: any,
+    @User() user: AuthenticatedUser,
   ) {
-    if (!user || !user._id) {
-      throw new UnauthorizedException('User not authenticated');
-    }
-    
-    const userId = user._id;
-    const userRoles = user.roles || [];
-    const organization = user.organization || userId;
+    const { userId, userRoles, organization } = this.extractUserContext(user);
     
     return this.taskService.updateTaskWithRBAC(id, updateTaskDto, userId, userRoles, organization);
   }
 
   @Get('debug')
   @ApiOperation({ summary: 'Debug endpoint to check all tasks for a user' })
-  async debugTasks(@User() user: any) {
-    if (!user || !user._id) {
-      throw new UnauthorizedException('User not authenticated');
+  async debugTasks(@User() user: AuthenticatedUser) {
+    // Just for tesst: >> Only allow debug endpoints in development
+    if (process.env.NODE_ENV === 'production') {
+      throw new ForbiddenException('Debug endpoints are not available in production');
     }
     
-    const userId = user._id;
-    const organization = user.organization || userId;
+    const { organization } = this.extractUserContext(user);
     return this.taskService.debugTasks(organization);
   }
 
   @Get('debug/:taskId')
   @ApiOperation({ summary: 'Debug endpoint to check a specific task and user permissions' })
-  async debugTask(@Param('taskId') taskId: string, @User() user: any) {
-    if (!user || !user._id) {
-      throw new UnauthorizedException('User not authenticated');
+  async debugTask(@Param('taskId', MongoIdPipe) taskId: string, @User() user: AuthenticatedUser) {
+    // Just for tesst: >> Only allow debug endpoints in development
+    if (process.env.NODE_ENV === 'production') {
+      throw new ForbiddenException('Debug endpoints are not available in production');
     }
     
-    const userId = user._id;
-    const userRoles = user.roles || [];
-    const organization = user.organization || userId;
+    const { userId, userRoles, organization } = this.extractUserContext(user);
     
     return this.taskService.debugTask(taskId, userId, userRoles, organization);
   }
@@ -159,16 +138,10 @@ export class TaskController {
   @ApiResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Unauthorized' })
   @ApiResponse({ status: HttpStatus.FORBIDDEN, description: 'Forbidden - insufficient permissions' })
   async deleteTask(
-    @Param('id') id: string,
-    @User() user: any,
+    @Param('id', MongoIdPipe) id: string,
+    @User() user: AuthenticatedUser,
   ) {
-    if (!user || !user._id) {
-      throw new UnauthorizedException('User not authenticated');
-    }
-    
-    const userId = user._id;
-    const userRoles = user.roles || [];
-    const organization = user.organization || userId;
+    const { userId, userRoles, organization } = this.extractUserContext(user);
     
     return this.taskService.deleteTaskWithRBAC(id, userId, userRoles, organization);
   }

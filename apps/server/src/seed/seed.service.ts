@@ -16,53 +16,45 @@ export class SeedService {
 
   async seedDatabase(): Promise<void> {
     try {
-      this.logger.log('🌱 Starting database seeding...');
+      this.logger.log(' Starting database seeding...');
 
-      // Check if seed data already exists by looking for specific seed emails
       const seedEmails = profileSeedData.map(p => p.email);
       const existingSeedProfiles = await this.profilesRepository.findAll({
         filter: { email: { $in: seedEmails } }
       });
 
       if (existingSeedProfiles.length > 0) {
-        this.logger.log(`📊 Seed data already exists (${existingSeedProfiles.length} profiles found), skipping seed`);
+        this.logger.log(`Seed data already exists (${existingSeedProfiles.length} profiles found), skipping seed`);
         return;
       }
-
-      // Seed profiles
       await this.seedProfiles();
-
-      // Seed tasks
       await this.seedTasks();
 
-      this.logger.log('✅ Database seeding completed successfully');
+      this.logger.log(' Database seeding completed successfully');
     } catch (error) {
-      this.logger.error('❌ Error seeding database', error);
+      this.logger.error(' Error seeding database', error);
       throw error;
     }
   }
 
   async forceSeedDatabase(): Promise<void> {
     try {
-      this.logger.log('🌱 Force seeding database (ignoring existing data)...');
+      this.logger.log('Seeding database (ignoring existing data)...');
 
-      // Seed profiles
       await this.seedProfiles();
-
-      // Seed tasks
       await this.seedTasks();
 
-      this.logger.log('✅ Force seeding completed successfully');
+      this.logger.log('Force seeding completed successfully');
     } catch (error) {
-      this.logger.error('❌ Error force seeding database', error);
+      this.logger.error('Error force seeding database', error);
       throw error;
     }
   }
 
   private async seedProfiles(): Promise<void> {
-    this.logger.log('👥 Seeding profiles...');
+    this.logger.log('Seeding profiles...');
 
-    // Hash passwords before inserting
+    // Hash passwords before adding in DB
     const profilesWithHashedPasswords = await Promise.all(
       profileSeedData.map(async (profile) => ({
         ...profile,
@@ -71,11 +63,11 @@ export class SeedService {
     );
 
     const createdProfiles = await this.profilesRepository.createAll(profilesWithHashedPasswords);
-    this.logger.log(`✅ Created ${createdProfiles.length} profiles`);
+    this.logger.log(` Created ${createdProfiles.length} profiles`);
   }
 
   private async seedTasks(): Promise<void> {
-    this.logger.log('📋 Seeding tasks...');
+    this.logger.log(' Seeding tasks...');
 
     // Get all profiles to map emails to IDs
     const allProfiles = await this.profilesRepository.findAll({ filter: {} });
@@ -107,6 +99,6 @@ export class SeedService {
     });
 
     const createdTasks = await this.taskRepository.createAll(processedTasks);
-    this.logger.log(`✅ Created ${createdTasks.length} tasks`);
+    this.logger.log(` Created ${createdTasks.length} tasks`);
   }
 }

@@ -35,7 +35,7 @@ export class Profile extends BaseModel {
     required: false,
     type: [String],
     enum: APP_ROLES,
-    default: [APP_ROLES.CONTRACTOR],
+    default: [APP_ROLES.USER],
   })
   roles: APP_ROLES[];
 

@@ -9,7 +9,7 @@ export class SeedController {
 
   @Post()
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Force seed the database with sample data' })
+  @ApiOperation({ summary: 'Seed the database with sample data' })
   @ApiResponse({ 
     status: HttpStatus.OK, 
     description: 'Database seeded successfully'

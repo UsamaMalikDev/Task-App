@@ -24,15 +24,10 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     done: (arg0: null, arg1: Profile) => void,
   ): Promise<boolean> {
     const timeDiff = exp - iat;
-    if (timeDiff <= 0) {
-      throw new UnauthorizedException();
-    }
+    if (timeDiff <= 0) throw new UnauthorizedException();
 
     const user = await this.profilesService.get(_id);
-    if (!user) {
-      throw new UnauthorizedException();
-    }
-
+    if (!user) throw new UnauthorizedException();
     done(null, user);
     return true;
   }

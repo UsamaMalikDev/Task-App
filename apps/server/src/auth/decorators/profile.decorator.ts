@@ -6,10 +6,7 @@ export const Profile = createParamDecorator(
     
     // The JWT strategy should have already validated the token and set the user
     // in the request object
-    if (request.user && request.user._id) {
-      return request.user._id;
-    }
-    
+    if (request.user && request.user._id) return request.user._id;
     return null;
   },
 );

@@ -1,7 +1,5 @@
 import { Module } from '@nestjs/common';
 import { APP_INTERCEPTOR } from '@nestjs/core';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
 import { MongooseModule } from '@nestjs/mongoose';
 import { ConfigModule } from 'src/common/config/config.module';
 import { ConfigService } from 'src/common/config/config.service';
@@ -28,9 +26,8 @@ import { LoggingInterceptor } from 'src/common/interceptors/logging.interceptor'
     HealthModule,
     SeedModule,
   ],
-  controllers: [AppController],
+  controllers: [],
   providers: [
-    AppService,
     {
       provide: APP_INTERCEPTOR,
       useClass: LoggingInterceptor,

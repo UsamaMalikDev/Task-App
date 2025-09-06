@@ -54,19 +54,8 @@ export class TaskRepository {
     let nextCursor: string | undefined;
 
     if (query.page) {
-      // Page-based pagination
       const skip = (query.page - 1) * limit;
       
-      console.log('🔍 Task Repository RBAC Query Debug (Page-based):', {
-        filter: JSON.stringify(filter, null, 2),
-        sort: JSON.stringify(sort, null, 2),
-        page: query.page,
-        limit,
-        skip,
-        total,
-        totalPages,
-      });
-
       tasks = await this.taskModel
         .find(filter)
         .sort(sort)
@@ -76,12 +65,11 @@ export class TaskRepository {
 
       hasMore = query.page < totalPages;
     } else {
-      // Cursor-based pagination (legacy)
       if (cursor) {
         filter.createdAt = { $lt: new Date(cursor) };
       }
 
-      console.log('🔍 Task Repository RBAC Query Debug (Cursor-based):', {
+      console.log('Task Repository RBAC Query Debug (Cursor-based):', {
         filter: JSON.stringify(filter, null, 2),
         sort: JSON.stringify(sort, null, 2),
         limit,
@@ -124,19 +112,17 @@ export class TaskRepository {
   ): Promise<{ tasks: TaskDocument[]; nextCursor?: string; hasMore: boolean; totalPages?: number; total?: number }> {
     const filter: any = { organization };
 
-    // Apply filters
     if (query.status) filter.status = query.status;
     if (query.priority) filter.priority = query.priority;
     if (query.assignedTo) filter.assignedTo = query.assignedTo;
     if (query.createdBy) filter.createdBy = query.createdBy;
     if (query.isOverdue !== undefined) filter.isOverdue = query.isOverdue;
 
-    // Apply search
-    if (query.search) {
-      filter.$text = { $search: query.search };
-    }
+    // for search
+    if (query.search) filter.$text = { $search: query.search };
+    
 
-    // Sort
+    // for Sort
     const sort: any = {};
     sort[query.sortBy || 'createdAt'] = query.sortOrder === 'asc' ? 1 : -1;
 
@@ -149,10 +135,9 @@ export class TaskRepository {
     let nextCursor: string | undefined;
 
     if (query.page) {
-      // Page-based pagination
       const skip = (query.page - 1) * limit;
       
-      console.log('🔍 Task Repository Query Debug (Page-based):', {
+      console.log(' Task Repository Query Debug:', {
         organization,
         filter: JSON.stringify(filter, null, 2),
         sort: JSON.stringify(sort, null, 2),
@@ -172,19 +157,10 @@ export class TaskRepository {
 
       hasMore = query.page < totalPages;
     } else {
-      // Cursor-based pagination (legacy)
       if (cursor) {
         const cursorDate = new Date(cursor);
         filter.createdAt = { $lt: cursorDate };
       }
-
-      console.log('🔍 Task Repository Query Debug (Cursor-based):', {
-        organization,
-        filter: JSON.stringify(filter, null, 2),
-        sort: JSON.stringify(sort, null, 2),
-        limit,
-        cursor,
-      });
 
       // Execute query with limit + 1 to check if there are more results
       const allTasks = await this.taskModel
@@ -198,7 +174,7 @@ export class TaskRepository {
       nextCursor = hasMore ? (tasks[tasks.length - 1] as any).createdAt.toISOString() : undefined;
     }
 
-    console.log('📊 Task Repository Results:', {
+    console.log(' Task Repository Results:', {
       totalTasks: tasks.length,
       hasMore,
       total,
