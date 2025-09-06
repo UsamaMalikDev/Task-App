@@ -48,7 +48,10 @@ const SigninPage = () => {
     try {
       setSubmitting(true);
       const authData = await AuthApi.signIn(form);
+      console.log("🚀 ~ handleSubmit ~ authData:", authData)
+      console.log("🚀 ~ handleSubmit ~ authData:", authData)
       const error = checkError([authData]);
+      console.log("🚀 ~ handleSubmit ~ error:", error)
       if (error) {
         setFormError(typeof error === "string" ? error : "Sign in failed");
         return;

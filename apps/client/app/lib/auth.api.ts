@@ -31,6 +31,7 @@ const API_REQUESTS = {
 
 const AuthApi = {
   signIn: (body: SignInPayloadType): Promise<AuthShape> => {
+    console.log("🚀 ~ body:", body)
     return sendRequest(
       API_REQUESTS.SIGN_IN.method,
       API_REQUESTS.SIGN_IN.path,

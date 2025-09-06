@@ -14,7 +14,7 @@ import { ProfilesController } from './profile.controller';
     ]),
   ],
   providers: [ProfilesService, ProfilesRepository],
-  exports: [ProfilesService],
+  exports: [ProfilesService, ProfilesRepository],
   controllers: [ProfilesController],
 })
 export class ProfileModule {}

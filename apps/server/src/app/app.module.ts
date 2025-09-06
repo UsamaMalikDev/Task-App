@@ -9,6 +9,7 @@ import { AuthModule } from 'src/auth/auth.module';
 import { ProfileModule } from 'src/profile/profile.module';
 import { TaskModule } from 'src/task/task.module';
 import { HealthModule } from 'src/health/health.module';
+import { SeedModule } from 'src/seed/seed.module';
 import { LoggingInterceptor } from 'src/common/interceptors/logging.interceptor';
 
 @Module({
@@ -25,6 +26,7 @@ import { LoggingInterceptor } from 'src/common/interceptors/logging.interceptor'
     ProfileModule,
     TaskModule,
     HealthModule,
+    SeedModule,
   ],
   controllers: [AppController],
   providers: [

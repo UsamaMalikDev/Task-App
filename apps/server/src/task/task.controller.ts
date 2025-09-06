@@ -52,15 +52,17 @@ export class TaskController {
   @ApiQuery({ name: 'sortOrder', required: false, description: 'Sort order' })
   async getTasks(
     @Query() query: TaskQueryDto,
-    @Profile() userId: string,
+    @User() user: any,
   ) {
-    if (!userId) {
+    if (!user || !user._id) {
       throw new UnauthorizedException('User not authenticated');
     }
     
-    // For now, using userId as organizationId - this can be modified based on your business logic
-    const organizationId = userId;
-    return this.taskService.getTasks(organizationId, query);
+    const userId = user._id;
+    const userRoles = user.roles || [];
+    const organization = user.organization || userId; // Use user's organization, fallback to userId
+    
+    return this.taskService.getTasksWithRBAC(organization, query, userId, userRoles);
   }
 
   @Post()
@@ -70,16 +72,34 @@ export class TaskController {
   @ApiResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Unauthorized' })
   async createTask(
     @Body() createTaskDto: CreateTaskDto,
-    @Profile() userId: string,
+    @User() user: any,
   ) {
-    if (!userId) {
+    if (!user || !user._id) {
       throw new UnauthorizedException('User not authenticated');
     }
     
-    // For now, using userId as organizationId - this can be modified based on your business logic
-    const organizationId = userId;
-    const createdBy = userId;
-    return this.taskService.createTask(createTaskDto, organizationId, createdBy);
+    const userId = user._id;
+    const organization = user.organization || userId;
+    return this.taskService.createTask(createTaskDto, organization, userId);
+  }
+
+  @Patch('bulk')
+  @ApiOperation({ summary: 'Perform bulk updates on multiple tasks' })
+  @ApiResponse({ status: HttpStatus.OK, description: 'Tasks updated successfully' })
+  @ApiResponse({ status: HttpStatus.BAD_REQUEST, description: 'Bad request' })
+  @ApiResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Unauthorized' })
+  async bulkUpdateTasks(
+    @Body() bulkUpdateDto: BulkUpdateTaskDto,
+    @User() user: any,
+  ) {
+    if (!user || !user._id) {
+      throw new UnauthorizedException('User not authenticated');
+    }
+    
+    const userId = user._id;
+    const userRoles = user.roles || [];
+    const organization = user.organization || userId;
+    return this.taskService.bulkUpdateTasksWithRBAC(bulkUpdateDto, userId, userRoles, organization);
   }
 
   @Patch(':id')
@@ -100,39 +120,35 @@ export class TaskController {
     
     const userId = user._id;
     const userRoles = user.roles || [];
-    const organizationId = userId; // For now, using userId as organizationId
+    const organization = user.organization || userId;
     
-    return this.taskService.updateTaskWithRBAC(id, updateTaskDto, userId, userRoles, organizationId);
-  }
-
-  @Patch('bulk')
-  @ApiOperation({ summary: 'Perform bulk updates on multiple tasks' })
-  @ApiResponse({ status: HttpStatus.OK, description: 'Tasks updated successfully' })
-  @ApiResponse({ status: HttpStatus.BAD_REQUEST, description: 'Bad request' })
-  @ApiResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Unauthorized' })
-  async bulkUpdateTasks(
-    @Body() bulkUpdateDto: BulkUpdateTaskDto,
-    @Profile() userId: string,
-  ) {
-    if (!userId) {
-      throw new UnauthorizedException('User not authenticated');
-    }
-    
-    // For now, using userId as organizationId - this can be modified based on your business logic
-    const organizationId = userId;
-    return this.taskService.bulkUpdateTasks(bulkUpdateDto, organizationId);
+    return this.taskService.updateTaskWithRBAC(id, updateTaskDto, userId, userRoles, organization);
   }
 
   @Get('debug')
   @ApiOperation({ summary: 'Debug endpoint to check all tasks for a user' })
-  async debugTasks(@Profile() userId: string) {
-    if (!userId) {
+  async debugTasks(@User() user: any) {
+    if (!user || !user._id) {
       throw new UnauthorizedException('User not authenticated');
     }
     
-    // For now, using userId as organizationId - this can be modified based on your business logic
-    const organizationId = userId;
-    return this.taskService.debugTasks(organizationId);
+    const userId = user._id;
+    const organization = user.organization || userId;
+    return this.taskService.debugTasks(organization);
+  }
+
+  @Get('debug/:taskId')
+  @ApiOperation({ summary: 'Debug endpoint to check a specific task and user permissions' })
+  async debugTask(@Param('taskId') taskId: string, @User() user: any) {
+    if (!user || !user._id) {
+      throw new UnauthorizedException('User not authenticated');
+    }
+    
+    const userId = user._id;
+    const userRoles = user.roles || [];
+    const organization = user.organization || userId;
+    
+    return this.taskService.debugTask(taskId, userId, userRoles, organization);
   }
 
   @Delete(':id')
@@ -152,8 +168,8 @@ export class TaskController {
     
     const userId = user._id;
     const userRoles = user.roles || [];
-    const organizationId = userId; // For now, using userId as organizationId
+    const organization = user.organization || userId;
     
-    return this.taskService.deleteTaskWithRBAC(id, userId, userRoles, organizationId);
+    return this.taskService.deleteTaskWithRBAC(id, userId, userRoles, organization);
   }
 }

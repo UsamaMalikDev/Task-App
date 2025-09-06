@@ -52,11 +52,13 @@ export const sendRequest = async (
     const res = await fetch(`${BASE_URL}${path}`, requestOptions);
     const response = await res.json();
 
-    if (!response?.result) {
-      return { error: response.message };
+    // Check if the response has an error
+    if (!res.ok) {
+      return { error: response.message || 'Request failed' };
     }
 
-    return response.result.at(0);
+    // Return the response directly since the backend returns the data directly
+    return response;
   } catch (error) {
     throw error;
   }

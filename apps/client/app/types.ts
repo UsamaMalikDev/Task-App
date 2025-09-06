@@ -112,7 +112,7 @@ export type Task = {
   status: TaskStatus;
   priority: TaskPriority;
   dueDate: string;
-  organizationId: string;
+  organization: string;
   createdBy: string;
   assignedTo?: string;
   tags: string[];
@@ -153,6 +153,7 @@ export type BulkUpdateTaskPayload = {
 export type TaskQueryParams = {
   cursor?: string;
   limit?: number;
+  page?: number;
   status?: TaskStatus;
   priority?: TaskPriority;
   assignedTo?: string;
@@ -167,6 +168,8 @@ export type TaskResponse = {
   tasks: Task[];
   nextCursor?: string;
   hasMore: boolean;
+  totalPages?: number;
+  total?: number;
 };
 
 export type TaskScope = 'my' | 'org';

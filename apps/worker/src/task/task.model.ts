@@ -29,7 +29,7 @@ export class Task {
   dueDate: Date;
 
   @Prop({ required: true, type: String })
-  organizationId: string;
+  organization: string;
 
   @Prop({ required: true, type: String })
   createdBy: string;
@@ -56,6 +56,6 @@ export class Task {
 export const TaskModel = SchemaFactory.createForClass(Task);
 
 // Indexes for better query performance
-TaskModel.index({ organizationId: 1, dueDate: 1 });
-TaskModel.index({ organizationId: 1, isOverdue: 1 });
+TaskModel.index({ organization: 1, dueDate: 1 });
+TaskModel.index({ organization: 1, isOverdue: 1 });
 TaskModel.index({ dueDate: 1, status: 1, isOverdue: 1 });

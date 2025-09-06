@@ -7,7 +7,7 @@ import {
   TaskResponse 
 } from "../types";
 import { HTTP_METHODS } from "../utils/constants";
-import { sendClientRequest } from "../utils/client-request-service";
+import { sendRequest } from "../utils/request-service";
 
 const API_REQUESTS = {
   GET_TASKS: {
@@ -46,14 +46,15 @@ const TaskApi = {
       ? `${API_REQUESTS.GET_TASKS.path}?${queryString.toString()}`
       : API_REQUESTS.GET_TASKS.path;
 
-    return sendClientRequest(
+    return sendRequest(
       API_REQUESTS.GET_TASKS.method,
       url
     );
   },
 
   createTask: (payload: CreateTaskPayload): Promise<Task> => {
-    return sendClientRequest(
+    console.log("🚀 ~ payload:", payload)
+    return sendRequest(
       API_REQUESTS.CREATE_TASK.method,
       API_REQUESTS.CREATE_TASK.path,
       payload
@@ -61,7 +62,7 @@ const TaskApi = {
   },
 
   updateTask: (taskId: string, payload: UpdateTaskPayload): Promise<Task> => {
-    return sendClientRequest(
+    return sendRequest(
       API_REQUESTS.UPDATE_TASK.method,
       `${API_REQUESTS.UPDATE_TASK.path}/${taskId}`,
       payload
@@ -69,7 +70,7 @@ const TaskApi = {
   },
 
   bulkUpdateTasks: (payload: BulkUpdateTaskPayload): Promise<Task[]> => {
-    return sendClientRequest(
+    return sendRequest(
       API_REQUESTS.BULK_UPDATE_TASKS.method,
       API_REQUESTS.BULK_UPDATE_TASKS.path,
       payload
@@ -77,7 +78,7 @@ const TaskApi = {
   },
 
   deleteTask: (taskId: string): Promise<void> => {
-    return sendClientRequest(
+    return sendRequest(
       API_REQUESTS.DELETE_TASK.method,
       `${API_REQUESTS.DELETE_TASK.path}/${taskId}`
     );

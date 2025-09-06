@@ -25,7 +25,7 @@ export class OverdueTaskScheduler {
 
       this.logger.log(`Successfully marked ${taskIds.length} tasks as overdue`, {
         taskIds,
-        organizationIds: [...new Set(overdueTasks.map(task => task.organizationId))],
+        organizationIds: [...new Set(overdueTasks.map(task => task.organization))],
       });
 
       // Log task statistics

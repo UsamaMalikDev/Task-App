@@ -39,6 +39,9 @@ export class Profile extends BaseModel {
   })
   roles: APP_ROLES[];
 
+  @Prop({ required: false, type: String })
+  organization?: string;
+
   @Prop({ required: false, type: Boolean, default: false })
   disabled?: boolean;
 }
