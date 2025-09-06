@@ -118,8 +118,14 @@ export class TaskRepository {
     if (query.createdBy) filter.createdBy = query.createdBy;
     if (query.isOverdue !== undefined) filter.isOverdue = query.isOverdue;
 
-    // for search
-    if (query.search) filter.$text = { $search: query.search };
+    // for search - use regex for left-to-right matching
+    if (query.search) {
+      const searchRegex = new RegExp(query.search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
+      filter.$or = [
+        { title: { $regex: searchRegex } },
+        { description: { $regex: searchRegex } }
+      ];
+    }
     
 
     // for Sort

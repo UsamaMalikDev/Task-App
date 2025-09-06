@@ -13,11 +13,11 @@ import {
   BulkUpdateTaskPayload,
   AuthShape
 } from "../types";
-import { checkError, getAuthCookie, removeAuthCookie } from "../utils/helpers";
+import { checkError, getAuthCookie } from "../utils/helpers";
 import { useApiOperation } from "../hooks/useApiOperations";
 import { setPersistedAuthData } from "../store/actions";
-import { removeAuthUser } from "../store/slice/auth.slice";
-import { removeProfile } from "../store/slice/profile.slice";
+import useLogout from "../hooks/useLogout";
+import { useNotification } from "../contexts/NotificationContext";
 
 // Components
 import TaskFilters from "./components/TaskFilters";
@@ -33,6 +33,8 @@ const TasksPage = () => {
   const user = useAppSelector((state) => state.profile);
   const dispatch = useAppDispatch();
   const { startApiOperation, terminateApiOperation } = useApiOperation();
+  const handleLogout = useLogout();
+  const { addNotification } = useNotification();
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -47,7 +49,7 @@ const TasksPage = () => {
     currentPage: 1,
     totalPages: 1,
     totalItems: 0,
-    itemsPerPage: 3,
+    itemsPerPage: 15,
   });
 
   const [scope, setScope] = useState<TaskScope>('my');
@@ -140,15 +142,34 @@ const TasksPage = () => {
       const error = checkError([response]);
 
       if (error) {
-        terminateApiOperation([typeof error === "string" ? error : "Failed to create task"]);
+        const errorMessage = typeof error === "string" ? error : "Failed to create task";
+        terminateApiOperation([errorMessage]);
+        addNotification({
+          type: 'error',
+          title: 'Task Creation Failed',
+          message: errorMessage,
+        });
         return;
       }
 
       setShowCreateForm(false);
       terminateApiOperation();
       loadTasks(pagination.currentPage);
-    } catch {
-      terminateApiOperation(["Failed to create task. Please try again."]);
+      
+      // Show success notification
+      addNotification({
+        type: 'success',
+        title: 'Task Created Successfully',
+        message: 'Task has been created successfully!',
+      });
+    } catch (error) {
+      const errorMessage = "Failed to create task. Please try again.";
+      terminateApiOperation([errorMessage]);
+      addNotification({
+        type: 'error',
+        title: 'Task Creation Failed',
+        message: errorMessage,
+      });
     }
   };
 
@@ -160,7 +181,13 @@ const TasksPage = () => {
       const error = checkError([response]);
 
       if (error) {
-        terminateApiOperation([typeof error === "string" ? error : "Failed to update task"]);
+        const errorMessage = typeof error === "string" ? error : "Failed to update task";
+        terminateApiOperation([errorMessage]);
+        addNotification({
+          type: 'error',
+          title: 'Task Update Failed',
+          message: errorMessage,
+        });
         return;
       }
 
@@ -168,24 +195,38 @@ const TasksPage = () => {
       terminateApiOperation();
       
       loadTasks(pagination.currentPage);
+      
+      // Show success notification
+      addNotification({
+        type: 'success',
+        title: 'Task Updated Successfully',
+        message: 'Task has been updated successfully!',
+      });
     } catch (error: any) {
       console.error('Update task error:', error);
       
+      let errorMessage = "Failed to update task. Please try again.";
+      
       // Handle RBAC-specific errors
       if (error?.response?.data?.message) {
-        const errorMessage = error.response.data.message;
-        if (errorMessage.includes('User can only access tasks they created')) {
-          terminateApiOperation(["You can only update tasks that you created."]);
-        } else if (errorMessage.includes('Manager can only access tasks within their organization')) {
-          terminateApiOperation(["You can only update tasks within your organization."]);
-        } else if (errorMessage.includes('Access denied')) {
-          terminateApiOperation(["You don't have permission to update this task."]);
+        const backendMessage = error.response.data.message;
+        if (backendMessage.includes('User can only access tasks they created')) {
+          errorMessage = "You can only update tasks that you created.";
+        } else if (backendMessage.includes('Manager can only access tasks within their organization')) {
+          errorMessage = "You can only update tasks within your organization.";
+        } else if (backendMessage.includes('Access denied')) {
+          errorMessage = "You don't have permission to update this task.";
         } else {
-          terminateApiOperation([errorMessage]);
+          errorMessage = backendMessage;
         }
-      } else {
-        terminateApiOperation(["Failed to update task. Please try again."]);
       }
+      
+      terminateApiOperation([errorMessage]);
+      addNotification({
+        type: 'error',
+        title: 'Task Update Failed',
+        message: errorMessage,
+      });
     }
   };
 
@@ -197,7 +238,13 @@ const TasksPage = () => {
       const error = checkError([response]);
 
       if (error) {
-        terminateApiOperation([typeof error === "string" ? error : "Failed to update tasks"]);
+        const errorMessage = typeof error === "string" ? error : "Failed to update tasks";
+        terminateApiOperation([errorMessage]);
+        addNotification({
+          type: 'error',
+          title: 'Bulk Update Failed',
+          message: errorMessage,
+        });
         return;
       }
 
@@ -205,8 +252,21 @@ const TasksPage = () => {
       terminateApiOperation();
       
       loadTasks(pagination.currentPage);
-    } catch {
-      terminateApiOperation(["Failed to update tasks. Please try again."]);
+      
+      // Show success notification
+      addNotification({
+        type: 'success',
+        title: 'Tasks Updated Successfully',
+        message: `${selectedTasks.length} tasks have been updated successfully!`,
+      });
+    } catch (error: any) {
+      const errorMessage = "Failed to update tasks. Please try again.";
+      terminateApiOperation([errorMessage]);
+      addNotification({
+        type: 'error',
+        title: 'Bulk Update Failed',
+        message: errorMessage,
+      });
     }
   };
 
@@ -217,45 +277,94 @@ const TasksPage = () => {
       
       console.log('Calling TaskApi.deleteTask...');
       // Call the delete API to permanently delete the task
-      await TaskApi.deleteTask(taskId);
+      const response = await TaskApi.deleteTask(taskId);
+      console.log('Delete API response:', response);
       
-      console.log('Task deleted successfully');
+      // Validate the response - check for error property
+      const error = checkError([response]);
+      if (error) {
+        const errorMessage = typeof error === "string" ? error : "Failed to delete task";
+        console.error('Delete task validation error:', errorMessage);
+        terminateApiOperation([errorMessage]);
+        addNotification({
+          type: 'error',
+          title: 'Task Deletion Failed',
+          message: errorMessage,
+        });
+        return;
+      }
+      
+      // Additional validation: ensure we got a proper response with message
+      if (!response || !response.message) {
+        console.error('Invalid delete response:', response);
+        terminateApiOperation(['Invalid response from server']);
+        addNotification({
+          type: 'error',
+          title: 'Task Deletion Failed',
+          message: 'Invalid response from server. Please try again.',
+        });
+        return;
+      }
+      
+      console.log('Delete operation completed successfully:', response.message);
+      
+      console.log('Task deleted successfully, refreshing task list...');
       terminateApiOperation();
       
+      // Show success notification immediately since backend confirmed deletion
+      addNotification({
+        type: 'success',
+        title: 'Task Deleted Successfully',
+        message: 'Task has been deleted successfully!',
+      });
+      
       // Refresh the current page to ensure consistency
-      loadTasks(pagination.currentPage);
+      try {
+        await loadTasks(pagination.currentPage);
+        console.log('Task list refreshed after deletion');
+      } catch (refreshError) {
+        console.error('Error refreshing task list after deletion:', refreshError);
+        // Don't show error notification for refresh failure, as deletion was successful
+      }
     } catch (error: any) {
       console.error('Delete task error:', error);
       
+      let errorMessage = "Failed to delete task. Please try again.";
+      
       // Handle RBAC-specific errors
       if (error?.response?.data?.message) {
-        const errorMessage = error.response.data.message;
-        if (errorMessage.includes('User can only access tasks they created')) {
-          terminateApiOperation(["You can only delete tasks that you created."]);
-        } else if (errorMessage.includes('Manager can only access tasks within their organization')) {
-          terminateApiOperation(["You can only delete tasks within your organization."]);
-        } else if (errorMessage.includes('Access denied')) {
-          terminateApiOperation(["You don't have permission to delete this task."]);
+        const backendMessage = error.response.data.message;
+        if (backendMessage.includes('User can only access tasks they created')) {
+          errorMessage = "You can only delete tasks that you created.";
+        } else if (backendMessage.includes('Manager can only access tasks within their organization')) {
+          errorMessage = "You can only delete tasks within your organization.";
+        } else if (backendMessage.includes('Access denied')) {
+          errorMessage = "You don't have permission to delete this task.";
         } else {
-          terminateApiOperation([errorMessage]);
+          errorMessage = backendMessage;
         }
-      } else {
-        terminateApiOperation(["Failed to delete task. Please try again."]);
       }
+      
+      terminateApiOperation([errorMessage]);
+      addNotification({
+        type: 'error',
+        title: 'Task Deletion Failed',
+        message: errorMessage,
+      });
     }
   };
 
   // Handle filter changes
-  const handleFilterChange = (newFilters: Partial<TaskQueryParams>) => {
+  const handleFilterChange = useCallback((newFilters: Partial<TaskQueryParams>) => {
     setFilters(prev => ({ ...prev, ...newFilters }));
     setPagination(prev => ({ ...prev, currentPage: 1 }));
-  };
+  }, []);
 
   // Handle scope change
-  const handleScopeChange = (newScope: TaskScope) => {
+  const handleScopeChange = useCallback((newScope: TaskScope) => {
     setScope(newScope);
     setPagination(prev => ({ ...prev, currentPage: 1 }));
-  };
+  }, []);
 
   // Handle task selection
   const handleTaskSelect = (taskId: string, selected: boolean) => {
@@ -271,30 +380,6 @@ const TasksPage = () => {
     setSelectedTasks(selected ? tasks.map(task => task._id) : []);
   };
 
-  // Handle logout
-  const handleLogout = () => {
-    try {
-      // Clear cookies
-      removeAuthCookie();
-      
-      // Clear Redux state
-      dispatch(removeAuthUser());
-      dispatch(removeProfile());
-      
-      // Clear localStorage (if any)
-      if (typeof window !== 'undefined') {
-        localStorage.clear();
-      }
-      
-      // Close dropdown
-      setShowUserDropdown(false);
-      
-      // Redirect to login page
-      window.location.href = '/sign-up';
-    } catch (error) {
-      console.error('Error during logout:', error);
-    }
-  };
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -345,11 +430,14 @@ const TasksPage = () => {
   // Show loading only briefly
   if (authLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 p-6">
-        <div className="max-w-7xl mx-auto">
-          <div className="flex items-center justify-center h-64">
-            <LoadingSpinner size="lg" />
-            <span className="ml-3 text-gray-600">Loading...</span>
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
+        <div className="flex items-center justify-center min-h-screen">
+          <div className="text-center">
+            <div className="relative">
+              <div className="w-16 h-16 border-4 border-blue-200 rounded-full animate-spin"></div>
+              <div className="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin absolute top-0 left-0"></div>
+            </div>
+            <p className="mt-6 text-lg text-slate-600 font-medium">Loading your workspace...</p>
           </div>
         </div>
       </div>
@@ -359,7 +447,7 @@ const TasksPage = () => {
   // Error states
   if (error && tasks.length === 0) {
     return (
-      <div className="min-h-screen bg-gray-50 p-6">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 p-6">
         <div className="max-w-7xl mx-auto">
           <ErrorMessage 
             message={error} 
@@ -371,117 +459,160 @@ const TasksPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
       <div className="max-w-7xl mx-auto p-6">
-        {/* Header */}
+        {/* Enhanced Header with Glassmorphism */}
         <div className="mb-8">
+          <div className="bg-white/80 backdrop-blur-xl rounded-2xl shadow-xl border border-white/20 p-8">
           <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
+              <div className="flex items-center space-x-6">
+                {/* Logo/Icon */}
+                <div className="w-16 h-16 bg-gradient-to-br from-blue-600 via-purple-600 to-indigo-700 rounded-2xl flex items-center justify-center shadow-lg">
+                  <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                  </svg>
+                </div>
+                
               <div>
-                <h1 className="text-3xl font-bold text-gray-900">Tasks</h1>
-                <p className="text-gray-600 mt-1">
-                  Manage your tasks and stay organized
-                </p>
+                  <h1 className="text-4xl font-bold bg-gradient-to-r from-gray-900 via-blue-800 to-purple-800 bg-clip-text text-transparent">
+                    Task Manager
+                  </h1>
+                  <p className="text-slate-600 mt-2 text-lg">
+                    Stay organized and boost your productivity
+                  </p>
+                </div>
               </div>
+              
+              {/* Right side: Create Button and User Profile */}
+              <div className="flex items-center space-x-4">
+                {/* Enhanced Create Button */}
+                <button
+                  onClick={() => setShowCreateForm(true)}
+                  className="group relative bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-700 hover:from-blue-700 hover:via-purple-700 hover:to-indigo-800 text-white px-8 py-4 rounded-2xl font-semibold transition-all duration-300 shadow-xl hover:shadow-2xl hover:scale-105 transform"
+                >
+                  <div className="flex items-center space-x-3">
+                    <svg className="w-6 h-6 transition-transform duration-300 group-hover:rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                    </svg>
+                    <span>Create Task</span>
+                  </div>
+                  <div className="absolute inset-0 bg-white/20 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                </button>
+
+                {/* User Profile - Rightmost */}
               {(() => {
-                // Get user data from Redux or cookies
                 const displayUser = user?._id ? user : getAuthCookie()?.user;
                 return displayUser?._id && (
-                  <div className="relative" ref={dropdownRef}>
-                    <button
-                      onClick={() => setShowUserDropdown(!showUserDropdown)}
-                      className="flex items-center space-x-3 bg-white rounded-lg px-4 py-2 shadow-sm border border-gray-200 hover:bg-gray-50 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-                    >
-                      <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
-                        <span className="text-white text-sm font-medium">
-                          {displayUser?.name?.charAt(0)?.toUpperCase() || 'U'}
-                        </span>
-                      </div>
-                      <div className="text-left">
-                        <p className="text-sm font-medium text-gray-900">{displayUser?.name || 'User'}</p>
-                        <p className="text-xs text-gray-500">{displayUser?.email}</p>
-                      </div>
-                      <svg
-                        className={`w-4 h-4 text-gray-400 transition-transform duration-200 ${
-                          showUserDropdown ? 'rotate-180' : ''
-                        }`}
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
+                    <div className="relative" ref={dropdownRef}>
+                      <button
+                        onClick={() => setShowUserDropdown(!showUserDropdown)}
+                        className="group flex items-center space-x-4 bg-white/60 backdrop-blur-sm rounded-2xl px-6 py-2 shadow-lg border border-white/30 hover:bg-white/80 transition-all duration-300 hover:scale-105"
                       >
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                      </svg>
-                    </button>
-
-                    {/* Dropdown Menu */}
-                    {showUserDropdown && (
-                      <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg border border-gray-200 z-50">
-                        <div className="py-1">
-                          <button
-                            onClick={handleLogout}
-                            className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors duration-200"
-                          >
-                            <svg
-                              className="w-4 h-4 mr-3 text-gray-400"
-                              fill="none"
-                              stroke="currentColor"
-                              viewBox="0 0 24 24"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
-                              />
-                            </svg>
-                            Logout
-                          </button>
+                        <div className="relative">
+                          <div className="w-12 h-10 bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 rounded-xl flex items-center justify-center shadow-lg">
+                            <span className="text-white text-lg font-bold">
+                        {displayUser?.name?.charAt(0)?.toUpperCase() || 'U'}
+                      </span>
+                    </div>
+                          <div className="absolute -top-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-white"></div>
                         </div>
-                      </div>
-                    )}
+                        <div className="text-left">
+                          <p className="text-sm font-semibold text-gray-900">{displayUser?.name || 'User'}</p>
+                      <p className="text-xs text-gray-500">{displayUser?.email}</p>
+                    </div>
+                        <svg
+                          className={`w-5 h-5 text-gray-400 transition-all duration-300 group-hover:text-gray-600 ${
+                            showUserDropdown ? 'rotate-180' : ''
+                          }`}
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                        </svg>
+                      </button>
+
+                      {/* Enhanced Dropdown Menu */}
+                      {showUserDropdown && (
+                        <div className="absolute right-0 mt-3 w-64 bg-white/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-white/30 z-50 overflow-hidden">
+                          <div className="p-1">
+                            
+                            <button
+                              onClick={() => {
+                                setShowUserDropdown(false);
+                                handleLogout();
+                              }}
+                              className="flex items-center w-full px-4 py-3 text-sm text-gray-700 hover:bg-red-50 hover:text-red-600 transition-all duration-200 rounded-xl m-1"
+                            >
+                              <svg
+                                className="w-5 h-5 mr-3"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
+                                />
+                              </svg>
+                              Sign Out
+                            </button>
+                          </div>
+                        </div>
+                      )}
                   </div>
                 );
               })()}
             </div>
-            <button
-              onClick={() => setShowCreateForm(true)}
-              className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-6 py-3 rounded-lg font-medium transition-all duration-200 shadow-lg hover:shadow-xl flex items-center space-x-2"
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-              </svg>
-              <span>Create Task</span>
-            </button>
+            </div>
           </div>
         </div>
 
-        {/* Filters */}
+        {/* Enhanced Filters */}
+        <div className="mb-6">
         <TaskFilters
           scope={scope}
           filters={filters}
           onScopeChange={handleScopeChange}
           onFilterChange={handleFilterChange}
         />
+        </div>
 
-        {/* Bulk Actions */}
+        {/* Enhanced Bulk Actions */}
         {selectedTasksCount > 0 && (
+          <div className="mb-6 transform animate-in slide-in-from-top duration-300">
+            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl p-4 border border-blue-200/50">
           <BulkActions
             selectedCount={selectedTasksCount}
             onBulkUpdate={bulkUpdateTasks}
             onClearSelection={() => setSelectedTasks([])}
           />
+            </div>
+          </div>
         )}
 
-        {/* Task List */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+        {/* Enhanced Task List Container */}
+        <div className="bg-white/80 backdrop-blur-xl rounded-2xl shadow-xl border border-white/20 overflow-hidden">
           {loading && tasks.length === 0 ? (
-            <LoadingSpinner />
+            <div className="flex items-center justify-center py-20">
+              <div className="text-center">
+                <div className="relative mb-6">
+                  <div className="w-12 h-12 border-4 border-blue-200 rounded-full animate-spin"></div>
+                  <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin absolute top-0 left-0"></div>
+                </div>
+                <p className="text-slate-600 font-medium">Loading your tasks...</p>
+              </div>
+            </div>
           ) : tasks.length === 0 ? (
+            <div className="p-12">
             <EmptyState 
               scope={scope}
-              filters={filters}
+                filters={filters}
               onCreateTask={() => setShowCreateForm(true)}
             />
+            </div>
           ) : (
             <>
               <TaskList
@@ -496,6 +627,7 @@ const TasksPage = () => {
                 loading={loading}
               />
               
+              <div className="border-t border-gray-100 bg-gray-50/50 p-6">
               <Pagination
                 currentPage={pagination.currentPage}
                 totalPages={pagination.totalPages}
@@ -505,12 +637,15 @@ const TasksPage = () => {
                 totalItems={pagination.totalItems}
                 itemsPerPage={pagination.itemsPerPage}
               />
+              </div>
             </>
           )}
         </div>
 
-        {/* Create/Edit Task Form */}
+        {/* Create/Edit Task Form Modal */}
         {(showCreateForm || editingTask) && (
+          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
           <TaskForm
             task={editingTask}
             onSubmit={editingTask ? 
@@ -522,8 +657,20 @@ const TasksPage = () => {
               setEditingTask(null);
             }}
           />
+            </div>
+          </div>
         )}
       </div>
+
+      {/* Floating Action Button for Mobile */}
+      <button
+        onClick={() => setShowCreateForm(true)}
+        className="fixed bottom-8 right-8 lg:hidden w-16 h-16 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-full shadow-2xl hover:shadow-3xl transform hover:scale-110 transition-all duration-300 flex items-center justify-center z-40"
+      >
+        <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+        </svg>
+      </button>
     </div>
   );
 };

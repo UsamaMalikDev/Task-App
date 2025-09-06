@@ -76,7 +76,7 @@ const TaskApi = {
     );
   },
 
-  deleteTask: (taskId: string): Promise<void> => {
+  deleteTask: (taskId: string): Promise<{ message: string }> => {
     return sendRequest(
       API_REQUESTS.DELETE_TASK.method,
       `${API_REQUESTS.DELETE_TASK.path}/${taskId}`

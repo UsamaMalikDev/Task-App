@@ -13,104 +13,96 @@ const BulkActions: React.FC<BulkActionsProps> = ({
   onBulkUpdate,
   onClearSelection,
 }) => {
-  const [showActions, setShowActions] = useState(false);
-  const [bulkStatus, setBulkStatus] = useState<TaskStatus | ''>('');
-  const [bulkPriority, setBulkPriority] = useState<TaskPriority | ''>('');
+  const [bulkStatus, setBulkStatus] = useState<TaskStatus | "">("");
+  const [bulkPriority, setBulkPriority] = useState<TaskPriority | "">("");
 
   const handleBulkUpdate = () => {
     const payload: BulkUpdateTaskPayload = {
-      taskIds: [], // This will be filled by the parent component
+      taskIds: [], // parent fills this
     };
 
     if (bulkStatus) payload.status = bulkStatus as TaskStatus;
-    
     if (bulkPriority) payload.priority = bulkPriority as TaskPriority;
-    
+
     if (bulkStatus || bulkPriority) {
       onBulkUpdate(payload);
-      setBulkStatus('');
-      setBulkPriority('');
-      setShowActions(false);
+      setBulkStatus("");
+      setBulkPriority("");
     }
   };
 
-  return (
-    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-4">
-          <span className="text-sm font-medium text-blue-900">
-            {selectedCount} task{selectedCount !== 1 ? 's' : ''} selected
-          </span>
-          
-          {!showActions && (
-            <button
-              onClick={() => setShowActions(true)}
-              className="text-sm text-blue-600 hover:text-blue-800 font-medium"
-            >
-              Bulk Actions
-            </button>
-          )}
-        </div>
+  if (selectedCount === 0) return null; // hide panel if no tasks selected
 
+  return (
+    <div className="bg-white shadow-sm border border-gray-200 rounded-xl p-5 mb-6 transition-all">
+      <div className="flex items-center justify-between mb-4">
+        <span className="text-sm font-semibold text-gray-800">
+          {selectedCount} task{selectedCount !== 1 ? "s" : ""} selected
+        </span>
         <button
           onClick={onClearSelection}
-          className="text-sm text-blue-600 hover:text-blue-800 font-medium"
+          className="text-sm text-red-600 hover:underline font-medium"
         >
           Clear Selection
         </button>
       </div>
 
-      {showActions && (
-        <div className="mt-4 pt-4 border-t border-blue-200">
-          <div className="flex items-center space-x-4">
-            <div className="flex items-center space-x-2">
-              <label className="text-sm font-medium text-blue-900">Status:</label>
-              <select
-                value={bulkStatus}
-                onChange={(e) => setBulkStatus(e.target.value as TaskStatus | '')}
-                className="px-3 py-1 border border-blue-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="">No change</option>
-                <option value={TaskStatus.PENDING}>Pending</option>
-                <option value={TaskStatus.IN_PROGRESS}>In Progress</option>
-                <option value={TaskStatus.COMPLETED}>Completed</option>
-                <option value={TaskStatus.CANCELLED}>Cancelled</option>
-              </select>
-            </div>
-
-            <div className="flex items-center space-x-2">
-              <label className="text-sm font-medium text-blue-900">Priority:</label>
-              <select
-                value={bulkPriority}
-                onChange={(e) => setBulkPriority(e.target.value as TaskPriority | '')}
-                className="px-3 py-1 border border-blue-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="">No change</option>
-                <option value={TaskPriority.LOW}>Low</option>
-                <option value={TaskPriority.MEDIUM}>Medium</option>
-                <option value={TaskPriority.HIGH}>High</option>
-                <option value={TaskPriority.URGENT}>Urgent</option>
-              </select>
-            </div>
-
-            <div className="flex items-center space-x-2">
-              <button
-                onClick={handleBulkUpdate}
-                disabled={!bulkStatus && !bulkPriority}
-                className="px-3 py-1 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-              >
-                Apply Changes
-              </button>
-              <button
-                onClick={() => setShowActions(false)}
-                className="px-3 py-1 bg-gray-100 text-gray-700 text-sm font-medium rounded-md hover:bg-gray-200 transition-colors"
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {/* Status Dropdown */}
+        <div>
+          <label className="block text-xs font-semibold text-gray-600 mb-1">
+            Status
+          </label>
+          <select
+            value={bulkStatus}
+            onChange={(e) => setBulkStatus(e.target.value as TaskStatus | "")}
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="">No change</option>
+            <option value={TaskStatus.PENDING}>Pending</option>
+            <option value={TaskStatus.IN_PROGRESS}>In Progress</option>
+            <option value={TaskStatus.COMPLETED}>Completed</option>
+            <option value={TaskStatus.CANCELLED}>Cancelled</option>
+          </select>
         </div>
-      )}
+
+        {/* Priority Dropdown */}
+        <div>
+          <label className="block text-xs font-semibold text-gray-600 mb-1">
+            Priority
+          </label>
+          <select
+            value={bulkPriority}
+            onChange={(e) =>
+              setBulkPriority(e.target.value as TaskPriority | "")
+            }
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="">No change</option>
+            <option value={TaskPriority.LOW}>Low</option>
+            <option value={TaskPriority.MEDIUM}>Medium</option>
+            <option value={TaskPriority.HIGH}>High</option>
+            <option value={TaskPriority.URGENT}>Urgent</option>
+          </select>
+        </div>
+
+        {/* Action Buttons */}
+        <div className="flex items-end gap-2">
+          <button
+            onClick={handleBulkUpdate}
+            disabled={!bulkStatus && !bulkPriority}
+            className="flex-1 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+          >
+            Apply
+          </button>
+          <button
+            onClick={onClearSelection}
+            className="flex-1 px-4 py-2 bg-gray-100 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-200 transition-all"
+          >
+            Cancel
+          </button>
+        </div>
+      </div>
     </div>
   );
 };
