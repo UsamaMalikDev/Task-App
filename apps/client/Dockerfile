@@ -1,7 +1,7 @@
 # Multi-stage build for Next.js application in monorepo
 
 # Stage 1: Dependencies
-FROM node:18-alpine AS deps
+FROM node:20-alpine AS deps
 RUN apk add --no-cache libc6-compat
 WORKDIR /app
 
@@ -10,11 +10,11 @@ COPY package*.json ./
 COPY apps/client/package*.json ./apps/client/
 COPY packages/*/package*.json ./packages/*/
 
-# Install dependencies
-RUN npm ci --workspace=apps/client --workspace=packages/shared-types --workspace=packages/shared-utils
+# Install dependencies for all workspaces
+RUN npm ci
 
 # Stage 2: Builder
-FROM node:18-alpine AS builder
+FROM node:20-alpine AS builder
 WORKDIR /app
 
 # Copy dependencies
@@ -33,7 +33,7 @@ RUN npm run build --workspace=packages/shared-utils
 RUN npm run build --workspace=apps/client
 
 # Stage 3: Runner
-FROM node:18-alpine AS runner
+FROM node:20-alpine AS runner
 WORKDIR /app
 
 ENV NODE_ENV production

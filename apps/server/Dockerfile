@@ -1,7 +1,7 @@
 # Multi-stage build for NestJS server in monorepo
 
 # Stage 1: Dependencies
-FROM node:18-alpine AS deps
+FROM node:20-alpine AS deps
 WORKDIR /app
 
 # Copy root package files
@@ -9,11 +9,11 @@ COPY package*.json ./
 COPY apps/server/package*.json ./apps/server/
 COPY packages/*/package*.json ./packages/*/
 
-# Install dependencies
-RUN npm ci --workspace=apps/server --workspace=packages/shared-types --workspace=packages/shared-utils
+# Install dependencies for all workspaces
+RUN npm ci
 
 # Stage 2: Builder
-FROM node:18-alpine AS builder
+FROM node:20-alpine AS builder
 WORKDIR /app
 
 # Copy dependencies
@@ -32,7 +32,7 @@ RUN npm run build --workspace=packages/shared-utils
 RUN npm run build --workspace=apps/server
 
 # Stage 3: Runner
-FROM node:18-alpine AS runner
+FROM node:20-alpine AS runner
 WORKDIR /app
 
 ENV NODE_ENV production
@@ -48,8 +48,8 @@ RUN adduser -S nestjs -u 1001
 COPY --from=builder /app/apps/server/dist ./dist
 COPY --from=builder /app/apps/server/package*.json ./
 COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/packages/shared-types/dist ./node_modules/@test-be-project/shared-types/dist
-COPY --from=builder /app/packages/shared-utils/dist ./node_modules/@test-be-project/shared-utils/dist
+COPY --from=builder /app/packages/shared-types/dist ./node_modules/@test-be-project/shared-types/
+COPY --from=builder /app/packages/shared-utils/dist ./node_modules/@test-be-project/shared-utils/
 
 # Change ownership of the app directory
 RUN chown -R nestjs:nodejs /app
