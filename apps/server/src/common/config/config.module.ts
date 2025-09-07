@@ -6,7 +6,7 @@ import { ConfigService } from './config.service';
   providers: [
     {
       provide: ConfigService,
-      useFactory: () => new ConfigService('.env'), // ✅ ensure filePath is passed
+      useFactory: () => new ConfigService('.env'), 
     },
   ],
   exports: [ConfigService],

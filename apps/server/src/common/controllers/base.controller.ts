@@ -16,7 +16,6 @@ export abstract class BaseController {
   protected extractRBACContext(user: AuthenticatedUser): RBACContext {
     const userContext = this.extractUserContext(user);
     
-    // Determine primary role
     let userRole: 'USER' | 'MANAGER' | 'ADMIN' = 'USER';
     if (userContext.userRoles.includes('ADMIN')) userRole = 'ADMIN';
     else if (userContext.userRoles.includes('MANAGER')) userRole = 'MANAGER';

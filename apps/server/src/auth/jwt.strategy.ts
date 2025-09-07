@@ -18,7 +18,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
         (request: Request) => {
           return request?.cookies?.auth_token;
         },
-        ExtractJwt.fromAuthHeaderAsBearerToken(), // Fallback for API testing
+        ExtractJwt.fromAuthHeaderAsBearerToken(),
       ]),
       ignoreExpiration: false,
       secretOrKey: configService.get('WEBTOKEN_SECRET_KEY'),

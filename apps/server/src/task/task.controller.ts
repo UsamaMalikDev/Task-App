@@ -9,7 +9,6 @@ import {
   Query,
   HttpStatus,
   UseGuards,
-  ForbiddenException,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -103,31 +102,6 @@ export class TaskController extends BaseController {
     const { userId, userRoles, organizationId } = this.extractUserContext(user);
     
     return this.taskService.updateTaskWithRBAC(id, updateTaskDto, userId, userRoles, organizationId);
-  }
-
-  @Get('debug')
-  @ApiOperation({ summary: 'Debug endpoint to check all tasks for a user' })
-  async debugTasks(@User() user: AuthenticatedUser) {
-    // Just for tesst: >> Only allow debug endpoints in development
-    if (process.env.NODE_ENV === 'production') {
-      throw new ForbiddenException('Debug endpoints are not available in production');
-    }
-    
-    const { organizationId } = this.extractUserContext(user);
-    return this.taskService.debugTasks(organizationId);
-  }
-
-  @Get('debug/:taskId')
-  @ApiOperation({ summary: 'Debug endpoint to check a specific task and user permissions' })
-  async debugTask(@Param('taskId', MongoIdPipe) taskId: string, @User() user: AuthenticatedUser) {
-    // Just for tesst: >> Only allow debug endpoints in development
-    if (process.env.NODE_ENV === 'production') {
-      throw new ForbiddenException('Debug endpoints are not available in production');
-    }
-    
-    const { userId, userRoles, organizationId } = this.extractUserContext(user);
-    
-    return this.taskService.debugTask(taskId, userId, userRoles, organizationId);
   }
 
   @Delete(':id')

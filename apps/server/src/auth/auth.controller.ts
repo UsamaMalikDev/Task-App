@@ -28,7 +28,7 @@ import { Profile } from '../profile/profile.model';
 import {
   ResetPasswordDto,
   SendResetPasswordEmailDto,
-} from '../auth/dto/passwors.dto';
+} from './dto/password.dto';
 
 @Controller('auth')
 @ApiTags('Auth')

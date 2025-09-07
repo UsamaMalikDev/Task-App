@@ -16,7 +16,7 @@ import { LoginProfileDto } from './dto/login-profile.dto';
 import {
   ResetPasswordDto,
   SendResetPasswordEmailDto,
-} from './dto/passwors.dto';
+} from './dto/password.dto';
 import { Response, Request } from 'express';
 
 export interface ITokenShape {
@@ -416,19 +416,17 @@ export class AuthService {
 
   async refreshTokenFromRequest(req: Request, res: Response): Promise<void> {
     try {
-      // Extract token from cookie
       const token = (req as any).cookies?.auth_token;
       
       if (!token) {
         throw new UnauthorizedException('No token provided');
       }
 
-      // Manually verify the token (even if expired)
       let decodedToken;
       try {
         decodedToken = this.jwtService.verify(token, {
           secret: this.configService.get('WEBTOKEN_SECRET_KEY'),
-          ignoreExpiration: true, // Allow expired tokens for refresh
+          ignoreExpiration: true,
         });
       } catch (error) {
         throw new UnauthorizedException('Invalid token');
@@ -456,11 +454,9 @@ export class AuthService {
         roles,
       });
 
-      // Set the new token in HttpOnly cookie
       const maxAge = Number(this.expiration);
       this.setAuthCookie(res, backendTokens.token, maxAge);
 
-      // Return the response
       res.status(200).json({
         user: {
           _id,

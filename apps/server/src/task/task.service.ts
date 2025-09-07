@@ -7,6 +7,7 @@ import { TaskQueryDto } from './dto/task-query.dto';
 import { Task, TaskDocument, TaskStatus } from './task.model';
 import { Types } from 'mongoose';
 import { CacheService } from 'src/common/cache/cache.service';
+import { AccessCheckResult, CachedTaskResult, TaskFilter, TaskOperation, TaskUpdateData, UserRole } from 'src/utils/types';
 
 @Injectable()
 export class TaskService {
@@ -17,20 +18,19 @@ export class TaskService {
     private readonly cacheService: CacheService,
   ) {}
 
-  // RBAC Helper Methods
-  private getUserRole(userRoles: string[]): 'USER' | 'MANAGER' | 'ADMIN' {
+  private getUserRole(userRoles: string[]): UserRole {
     if (userRoles.includes('ADMIN')) return 'ADMIN';
     if (userRoles.includes('MANAGER')) return 'MANAGER';
     return 'USER';
   }
 
   private canAccessTask(
-    userRole: 'USER' | 'MANAGER' | 'ADMIN',
+    userRole: UserRole,
     userId: string,
     userOrganizationId: string,
     task: TaskDocument,
-    operation: 'read' | 'write' | 'delete'
-  ): { allowed: boolean; reason?: string } {
+    operation: TaskOperation
+  ): AccessCheckResult {
     const taskOrganizationId = task.organizationId;
     const taskCreatedBy = task.createdBy;
 
@@ -42,26 +42,19 @@ export class TaskService {
 
     switch (userRole) {
       case 'ADMIN':
-        // Admin can access tasks across all organizations
         return { allowed: true };
 
       case 'MANAGER':
-        // Manager can access tasks within their organizationId
-        // Convert both to strings to handle ObjectId vs string comparison
         const userOrgIdStr = String(userOrganizationId);
         const taskOrgIdStr = String(taskOrganizationId);
         
-        if (taskOrgIdStr === userOrgIdStr) {
-          return { allowed: true };
-        }
+        if (taskOrgIdStr === userOrgIdStr) return { allowed: true };
         return { 
           allowed: false, 
           reason: 'Manager can only access tasks within their organizationId' 
         };
 
       case 'USER':
-        // User can only access their own tasks
-        // Convert both to strings to handle ObjectId vs string comparison
         const userIdStr = String(userId);
         const taskCreatedByStr = String(taskCreatedBy);
         
@@ -122,18 +115,10 @@ export class TaskService {
   }> {
     try {
       const userRole = this.getUserRole(userRoles);
-      
-      // Generate cache key with user context
       const cacheKey = `${this.cacheService.generateTaskCacheKey(organizationId, query)}_${userId}_${userRole}`;
       
-      // Tryss to get from cache first
-      const cachedResult = await this.cacheService.get<{
-        tasks: TaskDocument[];
-        nextCursor?: string;
-        hasMore: boolean;
-        totalPages?: number;
-        total?: number;
-      }>(cacheKey);
+      // Try to get from cache first
+      const cachedResult = await this.cacheService.get<CachedTaskResult>(cacheKey);
       if (cachedResult) {
         this.logger.log(`Tasks retrieved from cache for user: ${userId} with role: ${userRole}`, {
           userId,
@@ -143,7 +128,7 @@ export class TaskService {
         });
         return cachedResult;
       }
-      let filter: any = {};
+      let filter: TaskFilter= {};
       
       switch (userRole) {
         case 'ADMIN':
@@ -219,13 +204,7 @@ export class TaskService {
       // Generate cache key
       const cacheKey = this.cacheService.generateTaskCacheKey(organizationId, query);
 
-      const cachedResult = await this.cacheService.get<{
-        tasks: TaskDocument[];
-        nextCursor?: string;
-        hasMore: boolean;
-        totalPages?: number;
-        total?: number;
-      }>(cacheKey);
+      const cachedResult = await this.cacheService.get<CachedTaskResult>(cacheKey);
       if (cachedResult) {
         this.logger.log(`Tasks retrieved from cache for organizationId: ${organizationId}`, {
           organizationId,
@@ -283,9 +262,11 @@ export class TaskService {
         throw new BadRequestException('Task does not belong to this organizationId');
       }
 
-      const updateData: any = { ...updateTaskDto };
-
-      if (updateTaskDto.dueDate) updateData.dueDate = new Date(updateTaskDto.dueDate);
+      const updateData: TaskUpdateData = {
+        ...updateTaskDto,
+        dueDate: updateTaskDto.dueDate ? new Date(updateTaskDto.dueDate) : undefined,
+        completedAt: updateTaskDto.completedAt ? new Date(updateTaskDto.completedAt) : undefined,
+      };
     
       // Handle completion date
       if (updateTaskDto.status === TaskStatus.COMPLETED && !existingTask.completedAt) 
@@ -294,7 +275,7 @@ export class TaskService {
         updateData.completedAt = new Date(updateTaskDto.completedAt);
       
 
-      const updatedTask = await this.taskRepository.update(taskId, updateData);
+      const updatedTask = await this.taskRepository.update(taskId, updateData as Partial<Task>);
 
       await this.cacheService.deletePattern(
         this.cacheService.generateTaskInvalidationPattern(organizationId)
@@ -336,10 +317,11 @@ export class TaskService {
         throw new BadRequestException(accessCheck.reason || 'Access denied');
       }
 
-      const updateData: any = { ...updateTaskDto };
-
-      // handle due date conversion
-      if (updateTaskDto.dueDate) updateData.dueDate = new Date(updateTaskDto.dueDate);
+      const updateData: TaskUpdateData = {
+        ...updateTaskDto,
+        dueDate: updateTaskDto.dueDate ? new Date(updateTaskDto.dueDate) : undefined,
+        completedAt: updateTaskDto.completedAt ? new Date(updateTaskDto.completedAt) : undefined,
+      };
 
       // handle the completion date
       if (updateTaskDto.status === TaskStatus.COMPLETED && !existingTask.completedAt) 
@@ -348,7 +330,7 @@ export class TaskService {
         updateData.completedAt = new Date(updateTaskDto.completedAt);
       
 
-      const updatedTask = await this.taskRepository.update(taskId, updateData);
+      const updatedTask = await this.taskRepository.update(taskId, updateData as Partial<Task>);
       
       // remove cache for this organizationId
       await this.cacheService.deletePattern(
@@ -385,7 +367,7 @@ export class TaskService {
         throw new BadRequestException('Some tasks not found');
       }
 
-      const updateData: Partial<Task> = {};
+      const updateData: TaskUpdateData = {};
       if (bulkUpdateDto.status !== undefined) updateData.status = bulkUpdateDto.status;
       if (bulkUpdateDto.priority !== undefined) updateData.priority = bulkUpdateDto.priority;
       if (bulkUpdateDto.assignedTo !== undefined) updateData.assignedTo = bulkUpdateDto.assignedTo;
@@ -395,7 +377,7 @@ export class TaskService {
         updateData.completedAt = new Date();
       }
 
-      const updatedTasks = await this.taskRepository.bulkUpdate(bulkUpdateDto.taskIds, updateData);
+      const updatedTasks = await this.taskRepository.bulkUpdate(bulkUpdateDto.taskIds, updateData as Partial<Task>);
       
       // Invalidate cache for this organizationId
       await this.cacheService.deletePattern(
@@ -454,7 +436,7 @@ export class TaskService {
         throw new BadRequestException('No accessible tasks found for bulk update');
       }
 
-      const updateData: Partial<Task> = {};
+      const updateData: TaskUpdateData = {};
       if (bulkUpdateDto.status !== undefined) updateData.status = bulkUpdateDto.status;
       if (bulkUpdateDto.priority !== undefined) updateData.priority = bulkUpdateDto.priority;
       if (bulkUpdateDto.assignedTo !== undefined) updateData.assignedTo = bulkUpdateDto.assignedTo;
@@ -462,7 +444,7 @@ export class TaskService {
       // Handle completion date for status changes
       if (bulkUpdateDto.status === TaskStatus.COMPLETED) updateData.completedAt = new Date();
       
-      const updatedTasks = await this.taskRepository.bulkUpdate(accessibleTaskIds, updateData);
+      const updatedTasks = await this.taskRepository.bulkUpdate(accessibleTaskIds, updateData as Partial<Task>);
       
       // Invalidate cache for this organizationId
       await this.cacheService.deletePattern(
@@ -610,118 +592,6 @@ export class TaskService {
     } catch (error) {
       this.logger.error('Error marking tasks as overdue', error);
       throw new BadRequestException('Failed to mark tasks as overdue');
-    }
-  }
-
-  async debugTask(taskId: string, userId: string, userRoles: string[], userOrganizationId: string): Promise<any> {
-    try {
-      const task = await this.taskRepository.findById(taskId);
-      if (!task) {
-        return { error: 'Task not found' };
-      }
-
-      const userRole = this.getUserRole(userRoles);
-      const readAccess = this.canAccessTask(userRole, userId, userOrganizationId, task, 'read');
-      const writeAccess = this.canAccessTask(userRole, userId, userOrganizationId, task, 'write');
-      const deleteAccess = this.canAccessTask(userRole, userId, userOrganizationId, task, 'delete');
-
-      return {
-        task: {
-          _id: task._id,
-          title: task.title,
-          status: task.status,
-          priority: task.priority,
-          organizationId: task.organizationId,
-          createdBy: task.createdBy,
-          assignedTo: task.assignedTo,
-          dueDate: task.dueDate,
-          createdAt: (task as any).createdAt,
-        },
-        user: {
-          _id: userId,
-          roles: userRoles,
-          organizationId: userOrganizationId,
-          userRole: userRole
-        },
-        permissions: {
-          read: readAccess,
-          write: writeAccess,
-          delete: deleteAccess
-        },
-        comparison: {
-          userIdMatchesCreatedBy: userId === task.createdBy,
-          organizationIdMatches: userOrganizationId === task.organizationId,
-          userId: userId,
-          taskCreatedBy: task.createdBy,
-          userOrganizationId: userOrganizationId,
-          taskOrganizationId: task.organizationId
-        }
-      };
-    } catch (error) {
-      this.logger.error('Error in debug task', error);
-      throw new BadRequestException('Failed to debug task');
-    }
-  }
-
-  async debugTasks(organizationId: string): Promise<any> {
-    try {
-      // Get all tasks for this organizationId
-      const allTasks = await this.taskRepository.findAll({
-        filter: { organizationId }
-      });
-
-      // Get tasks created by this user
-      const createdTasks = await this.taskRepository.findAll({
-        filter: { organizationId, createdBy: organizationId }
-      });
-
-      // Get tasks assigned to this user
-      const assignedTasks = await this.taskRepository.findAll({
-        filter: { organizationId, assignedTo: organizationId }
-      });
-
-      return {
-        organizationId,
-        totalTasks: allTasks.length,
-        createdTasksCount: createdTasks.length,
-        assignedTasksCount: assignedTasks.length,
-        allTasks: allTasks.map(task => ({
-          _id: task._id,
-          title: task.title,
-          status: task.status,
-          priority: task.priority,
-          organizationId: task.organizationId,
-          createdBy: task.createdBy,
-          assignedTo: task.assignedTo,
-          dueDate: task.dueDate,
-          createdAt: (task as any).createdAt,
-        })),
-        createdTasks: createdTasks.map(task => ({
-          _id: task._id,
-          title: task.title,
-          status: task.status,
-          priority: task.priority,
-          organizationId: task.organizationId,
-          createdBy: task.createdBy,
-          assignedTo: task.assignedTo,
-          dueDate: task.dueDate,
-          createdAt: (task as any).createdAt,
-        })),
-        assignedTasks: assignedTasks.map(task => ({
-          _id: task._id,
-          title: task.title,
-          status: task.status,
-          priority: task.priority,
-          organizationId: task.organizationId,
-          createdBy: task.createdBy,
-          assignedTo: task.assignedTo,
-          dueDate: task.dueDate,
-          createdAt: (task as any).createdAt,
-        })),
-      };
-    } catch (error) {
-      this.logger.error('Error in debug tasks', error);
-      throw new BadRequestException('Failed to debug tasks');
     }
   }
 }

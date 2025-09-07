@@ -102,7 +102,7 @@ export class ProfilesRepository {
 
   async createAll(profiles: Partial<Profile>[]): Promise<ProfileDocument[]> {
     try {
-      const result = await this.profileModel.insertMany(profiles as any);
+      const result = await this.profileModel.insertMany(profiles);
       return result as ProfileDocument[];
     } catch (error) {
       throw new BadRequestException(`Error creating profiles: ${error.message}`);

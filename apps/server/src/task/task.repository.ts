@@ -42,10 +42,9 @@ export class TaskRepository {
     cursor?: string,
   ): Promise<{ tasks: TaskDocument[]; nextCursor?: string; hasMore: boolean; totalPages?: number; total?: number }> {
     // Sort
-    const sort: any = {};
+    const sort: Record<string, 1 | -1> = {};
     sort[query.sortBy || 'createdAt'] = query.sortOrder === 'asc' ? 1 : -1;
 
-    // Get total count for page-based pagination
     const total = await this.taskModel.countDocuments(filter);
     const totalPages = Math.ceil(total / limit);
 
@@ -69,31 +68,21 @@ export class TaskRepository {
         filter.createdAt = { $lt: new Date(cursor) };
       }
 
-      console.log('Task Repository RBAC Query Debug (Cursor-based):', {
-        filter: JSON.stringify(filter, null, 2),
-        sort: JSON.stringify(sort, null, 2),
-        limit,
-        cursor,
-      });
-
       // Execute query with limit + 1 to check if there are more results
-      const allTasks = await this.taskModel
+      const results = await this.taskModel
         .find(filter)
         .sort(sort)
         .limit(limit + 1)
         .exec();
 
-      hasMore = allTasks.length > limit;
-      tasks = hasMore ? allTasks.slice(0, limit) : allTasks;
-      nextCursor = hasMore ? (tasks[tasks.length - 1] as any).createdAt.toISOString() : undefined;
-    }
+      hasMore = results.length > limit;
+      tasks = results.slice(0, limit);
 
-    console.log('📊 Task Repository RBAC Results:', {
-      totalTasks: tasks.length,
-      hasMore,
-      total,
-      totalPages,
-    });
+      if (hasMore) {
+        const last = tasks[tasks.length - 1] as TaskDocument & { createdAt: Date };
+        nextCursor = last.createdAt.toISOString();
+      }
+    }
 
     return {
       tasks,
@@ -118,7 +107,6 @@ export class TaskRepository {
     if (query.createdBy) filter.createdBy = query.createdBy;
     if (query.isOverdue !== undefined) filter.isOverdue = query.isOverdue;
 
-    // for search - use regex for left-to-right matching
     if (query.search) {
       const searchRegex = new RegExp(query.search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
       filter.$or = [
@@ -127,12 +115,10 @@ export class TaskRepository {
       ];
     }
     
-
     // for Sort
-    const sort: any = {};
+    const sort: Record<string, 1 | -1> = {};
     sort[query.sortBy || 'createdAt'] = query.sortOrder === 'asc' ? 1 : -1;
 
-    // Get total count for page-based pagination
     const total = await this.taskModel.countDocuments(filter);
     const totalPages = Math.ceil(total / limit);
 
@@ -168,24 +154,20 @@ export class TaskRepository {
         filter.createdAt = { $lt: cursorDate };
       }
 
-      // Execute query with limit + 1 to check if there are more results
-      const allTasks = await this.taskModel
+      const results = await this.taskModel
         .find(filter)
         .sort(sort)
         .limit(limit + 1)
         .exec();
 
-      hasMore = allTasks.length > limit;
-      tasks = hasMore ? allTasks.slice(0, limit) : allTasks;
-      nextCursor = hasMore ? (tasks[tasks.length - 1] as any).createdAt.toISOString() : undefined;
-    }
+      hasMore = results.length > limit;
+      tasks = results.slice(0, limit);
 
-    console.log(' Task Repository Results:', {
-      totalTasks: tasks.length,
-      hasMore,
-      total,
-      totalPages,
-    });
+      if (hasMore) {
+        const last = tasks[tasks.length - 1] as TaskDocument & { createdAt: Date };
+        nextCursor = last.createdAt.toISOString();
+      }
+    }
 
     return {
       tasks,
@@ -229,7 +211,7 @@ export class TaskRepository {
 
   async createAll(tasks: Partial<Task>[]): Promise<TaskDocument[]> {
     try {
-      const result = await this.taskModel.insertMany(tasks as any);
+      const result = await this.taskModel.insertMany(tasks);
       return result as TaskDocument[];
     } catch (error) {
       throw new BadRequestException(`Error creating tasks: ${error.message}`);

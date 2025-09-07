@@ -1,13 +1,11 @@
 import { ApiProperty } from '@nestjs/swagger';
 import {
   IsEmail,
-  IsEnum,
   IsIn,
   IsNotEmpty,
   IsPhoneNumber,
   IsString,
   Matches,
-  MaxLength,
   MinLength,
 } from 'class-validator';
 import { VALID_ORGANIZATION_IDS } from 'src/utils/organizations';
