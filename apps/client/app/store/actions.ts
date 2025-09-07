@@ -6,8 +6,6 @@ import { AppDispatch } from "./store";
 export const setPersistedAuthData = (authData: AuthShape) => (dispatch: AppDispatch) => {
     const { backendTokens, user } = authData;
     dispatch(setAuthUser(backendTokens));
-    
-    // Only store safe profile data (no password, no roles)
     const safeProfileData: ProfileStateInterface = {
       _id: user._id,
       email: user.email,

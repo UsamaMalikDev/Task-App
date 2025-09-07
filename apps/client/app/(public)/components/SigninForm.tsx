@@ -3,8 +3,7 @@
 
 import React, { useState, useMemo, FormEvent } from "react";
 import { SignInPayloadType } from "@/app/types";
-
-const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+import { EMAIL_REGEX } from "@/app/utils/helpers";
 
 interface SigninFormProps {
   onSubmit: (form: SignInPayloadType) => Promise<void>;
@@ -157,8 +156,6 @@ const SigninForm: React.FC<SigninFormProps> = ({ onSubmit, submitting }) => {
           </div>
         )}
       </div>
-
-      {/* Local Error */}
       {localError && (
         <div className="p-3 bg-red-50 border border-red-200 rounded-xl">
           <div className="flex items-center space-x-2">
@@ -196,14 +193,10 @@ const SigninForm: React.FC<SigninFormProps> = ({ onSubmit, submitting }) => {
             </svg>
           </>
         )}
-        
-        {/* Button shine effect */}
         {!submitting && validation.isValid && (
           <div className="absolute inset-0 bg-white/20 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
         )}
       </button>
-
-      {/* Additional Options */}
       <div className="flex items-center justify-between text-sm">
         <label className="flex items-center space-x-2 text-gray-600">
           <input type="checkbox" className="rounded border-gray-300 text-blue-600 focus:ring-blue-500" />

@@ -15,7 +15,8 @@ import {
 import { checkError } from "../utils/helpers";
 import { useApiOperation } from "../hooks/useApiOperations";
 import { setAuthUser } from "../store/slice/auth.slice";
-import { selectAuthUser } from "../store/selectors/auth.selector";
+import { selectAuthUser, selectUserRoles } from "../store/selectors/auth.selector";
+import { APP_ROLES } from "../utils/constants";
 import { useNotification } from "../hooks/useNotification";
 import TasksPageHeader from "./components/TaskPageHeader";
 import TasksContent from "./components/TaskContent";
@@ -24,10 +25,10 @@ import ErrorMessage from "./components/ErrorMessage";
 
 const TasksPage = () => {
   const user = useAppSelector(selectAuthUser);
+  const userRoles = useAppSelector(selectUserRoles);
   const dispatch = useAppDispatch();
   const { startApiOperation, terminateApiOperation } = useApiOperation();
   const { addNotification } = useNotification();
-
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -43,7 +44,7 @@ const TasksPage = () => {
     itemsPerPage: 10,
   });
 
-  const [scope, setScope] = useState<TaskScope>('my');
+  const [scope, setScope] = useState<TaskScope>('org');
   const [filters, setFilters] = useState<TaskQueryParams>({
     limit: 25,
     sortBy: 'createdAt',
@@ -221,7 +222,6 @@ const TasksPage = () => {
       const error = checkError([response]);
       if (error) {
         const errorMessage = typeof error === "string" ? error : "Failed to delete task";
-        console.error('Delete task validation error:', errorMessage);
         terminateApiOperation([errorMessage]);
         addNotification({ type: 'error', title: 'Task Deletion Failed', message: errorMessage});
         return;
@@ -315,6 +315,13 @@ const TasksPage = () => {
     loadTasks(pagination.currentPage);
   }, [loadTasks, pagination.currentPage]);
 
+  useEffect(() => {
+    if (userRoles && userRoles.length > 0) {
+      if (userRoles.includes(APP_ROLES.ADMIN) || userRoles.includes(APP_ROLES.MANAGER)) setScope('org');
+      else setScope('my');
+    }
+  }, [userRoles]);
+
   const allTasksSelected = tasks.length > 0 && selectedTasks.length === tasks.length;
   const someTasksSelected = selectedTasks.length > 0 && selectedTasks.length < tasks.length;
   if (authLoading) return <p className="mt-6 text-lg text-slate-600 font-medium">Loading your workspace...</p>
@@ -339,7 +346,6 @@ const TasksPage = () => {
           user={user}
           onCreateTask={handleCreateTask}
         />
-
         <TasksContent
           tasks={tasks}
           loading={loading}

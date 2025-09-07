@@ -22,14 +22,11 @@ export const profileReducer = createSlice({
     setProfileUser: (state, action: PayloadAction<ProfileStateInterface>) => {
       return { ...state, ...action.payload };
     },
-    patchProfileUser: (state, action: PayloadAction<Partial<ProfileStateInterface>>) => {
-      return { ...state, ...action.payload };
-    },
     removeProfile: () => {
       return initialState;
     },
   },
 });
 
-export const { setProfileUser, removeProfile, patchProfileUser } = profileReducer.actions;
+export const { setProfileUser, removeProfile } = profileReducer.actions;
 export default profileReducer.reducer;

@@ -86,7 +86,7 @@ const TasksContent: React.FC<TasksContentProps> = ({
                 <div className="w-12 h-12 border-4 border-blue-200 rounded-full animate-spin"></div>
                 <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin absolute top-0 left-0"></div>
               </div>
-              <p className="text-slate-600 font-medium">Loading your tasks...</p>
+              {/* <p className="text-slate-600 font-medium">Loading your tasks...</p> */}
             </div>
           </div>
         ) : tasks.length === 0 ? (
@@ -126,7 +126,6 @@ const TasksContent: React.FC<TasksContentProps> = ({
         )}
       </div>
 
-      {/* Floating Action Button for Mobile */}
       <button
         onClick={onCreateTask}
         className="fixed bottom-8 right-8 lg:hidden w-16 h-16 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-full shadow-2xl hover:shadow-3xl transform hover:scale-110 transition-all duration-300 flex items-center justify-center z-40"

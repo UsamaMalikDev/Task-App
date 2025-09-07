@@ -1,8 +1,7 @@
-// SigninPage.tsx
 "use client";
-
 import React, { useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
+import { useNavigation } from "../hooks/useNavigation";
 import Link from "next/link";
 import { useAppDispatch } from "../store/hooks";
 import { AuthApi } from "../lib/auth.api";
@@ -12,14 +11,11 @@ import { SignInPayloadType } from "../types";
 import SigninForm from "./components/SigninForm";
 
 const SigninPage: React.FC = () => {
-  const router = useRouter();
   const dispatch = useAppDispatch();
+  const navigate = useNavigation();
   const searchParams = useSearchParams();
-
   const [formError, setFormError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
-  
-  // Get success message from URL params
   const successMessage = searchParams.get('message');
 
   const handleSubmit = async (form: SignInPayloadType) => {
@@ -27,31 +23,17 @@ const SigninPage: React.FC = () => {
 
     try {
       setSubmitting(true);
-      console.log('Attempting login with:', form);
       const response = await AuthApi.login(form);
-      console.log('Login response:', 
-        
-      );
 
       const error = checkError([response]);
       if (error) {
-        console.log('Login error:', error);
         setFormError(typeof error === "string" ? error : "Sign in failed");
         return;
       }
-
-      // Store user data in Redux and localStorage (for refresh token)
-      console.log('Setting user in Redux:', response.user);
       dispatch(setAuthUser(response.user));
-      
-      // Store user data in localStorage for refresh token
       localStorage.setItem('userId', response.user._id);
-
-      // Redirect to tasks page
-      console.log('Redirecting to tasks page');
-      router.push("/tasks");
+      navigate("/tasks");
     } catch (err) {
-      console.error('Login error:', err);
       setFormError("Something went wrong. Please try again.");
     } finally {
       setSubmitting(false);
@@ -60,16 +42,13 @@ const SigninPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 flex items-center justify-center p-6">
-      {/* Background Pattern */}
       <div className="absolute inset-0 overflow-hidden">
         <div className="absolute -top-40 -right-40 w-80 h-80 bg-gradient-to-br from-blue-400/30 to-purple-600/30 rounded-full blur-3xl"></div>
         <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-gradient-to-tr from-indigo-400/30 to-pink-600/30 rounded-full blur-3xl"></div>
       </div>
-
       <div className="relative w-full max-w-md">
         {/* Main Card */}
         <div className="bg-white/80 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 overflow-hidden">
-          {/* Header */}
           <div className="bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-700 px-8 py-8 text-center">
             <div className="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center mx-auto mb-4">
               <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -79,8 +58,6 @@ const SigninPage: React.FC = () => {
             <h1 className="text-2xl font-bold text-white mb-2">Welcome Back</h1>
             <p className="text-blue-100">Sign in to your Task Manager</p>
           </div>
-
-          {/* Form Container */}
           <div className="px-8 py-8">
             {successMessage && (
               <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-xl">
@@ -120,8 +97,6 @@ const SigninPage: React.FC = () => {
             </div>
           </div>
         </div>
-
-        {/* Additional Info */}
         <div className="mt-8 text-center">
           <p className="text-sm text-gray-500">
             Secure sign-in powered by advanced encryption

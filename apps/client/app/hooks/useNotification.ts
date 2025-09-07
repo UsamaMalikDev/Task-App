@@ -10,7 +10,7 @@ import {
 
 export const useNotification = () => {
   const dispatch = useDispatch();
-  const notifications = useSelector((state: RootState) => state.notification.notifications);
+  const notifications = useSelector((state: RootState) => state.notification.notifications) as NotificationData[];
 
   const addNotification = useCallback((notification: Omit<NotificationData, 'id'>) => {
     dispatch(addNotificationAction(notification));

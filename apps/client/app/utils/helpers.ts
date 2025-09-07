@@ -1,4 +1,3 @@
-import Cookies from "js-cookie";
 import { AuthShape } from "../types";
 import { NextRequest } from "next/server";
 import { APP_ROLES, NAV_PATHS } from "./constants";
@@ -32,32 +31,15 @@ export const validateAuthToken = (auth: AuthShape | null) => {
   const expiresTimestamp = Number(expires);
 
   if (currentTimestamp - createdOnTimestamp >= expiresTimestamp) {
-    removeAuthCookie();
     return null;
   }
   return auth;
 };
 
-export const setAuthCookie = (authData: AuthShape) => {
-  Cookies.set("auth", JSON.stringify(authData), {
-    expires: Number(authData?.backendTokens?.expires),
-    path: "/",
-    secure: process.env.NODE_ENV === "production",
-    httpOnly: process.env.NODE_ENV === "production",
-  });
-};
-
-export const removeAuthCookie = () => {
-  Cookies.remove("auth");
-};
-
-export const getAuthCookie = (): AuthShape => {
-  return JSON.parse(Cookies.get("auth") || "{}");
-};
 
 export const accessValidation = (
   auth: AuthShape | null,
-  _currentRoute?: string // unused now
+  _currentRoute?: string
 ) => {
   const defaultPayload = {
     valid: false,
@@ -126,12 +108,11 @@ export const isRouteValidForUser = (auth: AuthShape, currentRoute: string) => {
       const userRoles = auth?.user?.roles
 
       // Current route is valid for the user
-      if (allowedRoles.some((role: APP_ROLES) => userRoles.includes(role))) {
+      if (allowedRoles.some((role: APP_ROLES) => userRoles?.includes(role))) {
         return true
       }
     }
   }
-  // Current route is invalid for the user
   return false
 }
 
@@ -139,7 +120,6 @@ export const routeValidation = (
   auth: AuthShape | null,
   currentRoute: string,
 ) => {
-  // Handle unauthenticated users
   if (!auth) {
     return {
       valid: false,
@@ -188,3 +168,6 @@ export const getAbsolutePath = (relativePath: string, baseUrl?: string) => {
   const BASE_URL = baseUrl || process.env.NEXT_PUBLIC_CLIENT_PATH
   return `${BASE_URL}${relativePath}`
 }
+
+export const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+export const PHONE_REGEX = /^\+1\d{10}$/;

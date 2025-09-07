@@ -4,9 +4,7 @@
 import React, { useMemo, useState, FormEvent } from "react";
 import { SignupFormData } from "@/app/types";
 import { ORGANIZATIONS } from "@/app/utils/constants";
-
-const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const PHONE_REGEX = /^\+1\d{10}$/;
+import { EMAIL_REGEX, PHONE_REGEX } from "@/app/utils/helpers";
 
 interface SignupFormProps {
   onSubmit: (form: SignupFormData) => Promise<void>;

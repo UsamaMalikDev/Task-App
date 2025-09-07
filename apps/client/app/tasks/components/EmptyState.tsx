@@ -9,11 +9,9 @@ interface EmptyStateProps {
 }
 
 const EmptyState: React.FC<EmptyStateProps> = ({ scope, filters, onCreateTask }) => {
-  // Check if there are active filters
   const hasActiveFilters = filters.search || filters.status || filters.priority || filters.isOverdue;
 
   const getEmptyStateContent = () => {
-    // If filters are active, show filtered results message
     if (hasActiveFilters) {
       return {
         title: "No tasks match your filters",

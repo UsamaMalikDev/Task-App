@@ -18,7 +18,7 @@ const BulkActions: React.FC<BulkActionsProps> = ({
 
   const handleBulkUpdate = () => {
     const payload: BulkUpdateTaskPayload = {
-      taskIds: [], // parent fills this
+      taskIds: [], 
     };
 
     if (bulkStatus) payload.status = bulkStatus as TaskStatus;
@@ -31,7 +31,7 @@ const BulkActions: React.FC<BulkActionsProps> = ({
     }
   };
 
-  if (selectedCount === 0) return null; // hide panel if no tasks selected
+  if (selectedCount === 0) return null; 
 
   return (
     <div className="bg-white shadow-sm border border-gray-200 rounded-xl p-5 mb-6 transition-all">
@@ -48,7 +48,6 @@ const BulkActions: React.FC<BulkActionsProps> = ({
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {/* Status Dropdown */}
         <div>
           <label className="block text-xs font-semibold text-gray-600 mb-1">
             Status
@@ -65,8 +64,6 @@ const BulkActions: React.FC<BulkActionsProps> = ({
             <option value={TaskStatus.CANCELLED}>Cancelled</option>
           </select>
         </div>
-
-        {/* Priority Dropdown */}
         <div>
           <label className="block text-xs font-semibold text-gray-600 mb-1">
             Priority
@@ -85,8 +82,6 @@ const BulkActions: React.FC<BulkActionsProps> = ({
             <option value={TaskPriority.URGENT}>Urgent</option>
           </select>
         </div>
-
-        {/* Action Buttons */}
         <div className="flex items-end gap-2">
           <button
             onClick={handleBulkUpdate}

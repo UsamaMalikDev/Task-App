@@ -1,20 +1,14 @@
-// SignupPage.tsx
 "use client";
-
 import React, { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useNavigation } from "../../hooks/useNavigation";
 import Link from "next/link";
 import { AuthApi } from "../../lib/auth.api";
-import { checkError, setAuthCookie, accessValidation } from "../../utils/helpers";
-import { useAppDispatch } from "../../store/hooks";
-import { setPersistedAuthData } from "../../store/actions";
+import { checkError} from "../../utils/helpers";
 import { SignupFormData } from "@/app/types";
 import SignupForm from "./components/SignupForm";
 
 const SignupPage: React.FC = () => {
-  const router = useRouter();
-  const dispatch = useAppDispatch();
-
+  const navigate = useNavigation();
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
 
@@ -46,12 +40,7 @@ const SignupPage: React.FC = () => {
         setFormError(typeof error === "string" ? error : "Sign up failed");
         return;
       }
-
-      // Don't set auth cookies or dispatch auth data after signup
-      // User needs to sign in manually after account creation
-      
-      // Redirect to signin page with success message
-      router.push("/?message=Account created successfully! Please sign in.");
+      navigate("/?message=Account created successfully! Please sign in.");
     } catch (err) {
       setFormError("Something went wrong. Please try again.");
     } finally {
@@ -61,7 +50,6 @@ const SignupPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 py-12 px-6">
-      {/* Background Pattern */}
       <div className="absolute inset-0 overflow-hidden">
         <div className="absolute -top-40 -right-40 w-80 h-80 bg-gradient-to-br from-blue-400/30 to-purple-600/30 rounded-full blur-3xl"></div>
         <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-gradient-to-tr from-indigo-400/30 to-pink-600/30 rounded-full blur-3xl"></div>
@@ -71,7 +59,6 @@ const SignupPage: React.FC = () => {
       <div className="relative max-w-4xl mx-auto">
         {/* Main Card */}
         <div className="bg-white/80 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 overflow-hidden">
-          {/* Header */}
           <div className="bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-700 px-8 py-8 text-center">
             <div className="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center mx-auto mb-4">
               <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -80,8 +67,6 @@ const SignupPage: React.FC = () => {
             </div>
             <h1 className="text-3xl font-bold text-white mb-2">Create Your Account</h1>
             <p className="text-blue-100 text-lg">Join thousands of teams managing tasks efficiently</p>
-
-            {/* Features */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
               <div className="flex items-center justify-center space-x-2 text-white/90">
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -103,8 +88,6 @@ const SignupPage: React.FC = () => {
               </div>
             </div>
           </div>
-
-          {/* Form Container */}
           <div className="px-8 py-8">
             {formError && (
               <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl">

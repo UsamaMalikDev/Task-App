@@ -25,27 +25,6 @@ const TaskItem: React.FC<TaskItemProps> = ({
 }) => {
   const [showActions, setShowActions] = useState(false);
 
-  const handleStatusChange = async (newStatus: TaskStatus) => {
-    // This would typically call the update API
-    // For now, we'll just show the action
-    console.log(`Updating task ${task._id} status to ${newStatus}`);
-  };
-
-  const handlePriorityChange = async (newPriority: TaskPriority) => {
-    // This would typically call the update API
-    console.log(`Updating task ${task._id} priority to ${newPriority}`);
-  };
-
-  const handleDelete = () => {
-    console.log('Delete button clicked for task:', task._id, task.title);
-    if (window.confirm(`Are you sure you want to delete "${task.title}"? This action cannot be undone.`)) {
-      console.log('User confirmed deletion, calling onDelete');
-      onDelete();
-    } else {
-      console.log('User cancelled deletion');
-    }
-  };
-
   return (
     <div 
       className={`px-6 py-4 hover:bg-gray-50 transition-colors ${
@@ -63,7 +42,6 @@ const TaskItem: React.FC<TaskItemProps> = ({
         />
         
         <div className="ml-4 flex-1 grid grid-cols-12 gap-4 items-center">
-          {/* Task Title & Description */}
           <div className="col-span-5">
             <div className="flex items-start space-x-3">
               <div className="flex-1 min-w-0">
@@ -97,7 +75,6 @@ const TaskItem: React.FC<TaskItemProps> = ({
           <div className="col-span-2">
             <select
               value={task.status}
-              onChange={(e) => handleStatusChange(e.target.value as TaskStatus)}
               className={`text-xs font-medium px-2 py-1 rounded-full border-0 focus:ring-2 focus:ring-blue-500 ${getStatusColor(task.status)}`}
             >
               <option value={TaskStatus.PENDING}>Pending</option>
@@ -111,7 +88,6 @@ const TaskItem: React.FC<TaskItemProps> = ({
           <div className="col-span-2">
             <select
               value={task.priority}
-              onChange={(e) => handlePriorityChange(e.target.value as TaskPriority)}
               className={`text-xs font-medium px-2 py-1 rounded-full border-0 focus:ring-2 focus:ring-blue-500 ${getPriorityColor(task.priority)}`}
             >
               <option value={TaskPriority.LOW}>Low</option>
@@ -150,7 +126,6 @@ const TaskItem: React.FC<TaskItemProps> = ({
                 </svg>
               </button>
               <button
-                onClick={handleDelete}
                 className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all duration-200 group"
                 title="Delete task"
               >
