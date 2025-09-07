@@ -15,7 +15,6 @@ import authReducer from "./slice/auth.slice";
 import { profileReducer } from "./slice/profile.slice";
 import { notificationReducer } from "./slice/notification.slice";
 
-
 const reducers = combineReducers({
   auth: authReducer,
   profile: profileReducer,
@@ -28,7 +27,7 @@ const persistConfig = {
   whitelist: ["profile"],
   version: 1,
 };
-const persistedReducer = persistReducer(persistConfig, reducers);
+const persistedReducer = persistReducer<typeof reducers>(persistConfig, reducers);
 
 export const store = configureStore({
   reducer: persistedReducer,
@@ -42,5 +41,5 @@ export const store = configureStore({
 
 export const persistor = persistStore(store);
 
-export type RootState = ReturnType<typeof store.getState>;
+export type RootState = ReturnType<typeof reducers| any>;
 export type AppDispatch = typeof store.dispatch;
