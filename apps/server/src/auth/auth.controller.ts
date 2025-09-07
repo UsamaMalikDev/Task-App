@@ -8,6 +8,7 @@ import {
   Post,
   Res,
   Req,
+  UseGuards,
 } from '@nestjs/common';
 import {
   ApiBadRequestResponse,
@@ -21,6 +22,9 @@ import { Response, Request } from 'express';
 import { AuthService, ITokenReturnBody, ITokenShape } from './auth.service';
 import { SignupPayload } from './auth.types';
 import { LoginProfileDto } from './dto/login-profile.dto';
+import { JwtAuthGuard } from './decorators/jwt-auth.guard';
+import { User } from './decorators/user.decorator';
+import { Profile } from '../profile/profile.model';
 import {
   ResetPasswordDto,
   SendResetPasswordEmailDto,
@@ -114,7 +118,7 @@ export class AuthController {
   })
   @ApiResponse({ status: HttpStatus.BAD_REQUEST, description: 'Bad Request' })
   @ApiResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Unauthorized' })
-  refresh(@Body() body: { userId: string }): Promise<ITokenReturnBody> {
-    return this.authService.refreshToken(body.userId);
+  refresh(@Req() req: Request, @Res() res: Response): Promise<void> {
+    return this.authService.refreshTokenFromRequest(req as any, res);
   }
 }

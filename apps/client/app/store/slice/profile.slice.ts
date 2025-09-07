@@ -4,18 +4,14 @@ import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 export interface ProfileStateInterface {
   email: string;
   name: string;
-  password: string;
   avatar: string;
-  roles: Array<string>;
   _id: string;
 }
 
 const initialState: ProfileStateInterface = {
   email: '',
   name: '',
-  password: '',
   avatar: '',
-  roles: [],
   _id: '',
 };
 

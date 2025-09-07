@@ -57,9 +57,9 @@ export class TaskController extends BaseController {
     @Query() query: TaskQueryDto,
     @User() user: AuthenticatedUser,
   ) {
-    const { userId, userRoles, organization } = this.extractUserContext(user);
+    const { userId, userRoles, organizationId } = this.extractUserContext(user);
     
-    return this.taskService.getTasksWithRBAC(organization, query, userId, userRoles);
+    return this.taskService.getTasksWithRBAC(organizationId, query, userId, userRoles);
   }
 
   @Post()
@@ -71,8 +71,8 @@ export class TaskController extends BaseController {
     @Body() createTaskDto: CreateTaskDto,
     @User() user: AuthenticatedUser,
   ) {
-    const { userId, organization } = this.extractUserContext(user);
-    return this.taskService.createTask(createTaskDto, organization, userId);
+    const { userId, organizationId } = this.extractUserContext(user);
+    return this.taskService.createTask(createTaskDto, organizationId, userId);
   }
 
   @Patch('bulk')
@@ -84,8 +84,8 @@ export class TaskController extends BaseController {
     @Body() bulkUpdateDto: BulkUpdateTaskDto,
     @User() user: AuthenticatedUser,
   ) {
-    const { userId, userRoles, organization } = this.extractUserContext(user);
-    return this.taskService.bulkUpdateTasksWithRBAC(bulkUpdateDto, userId, userRoles, organization);
+    const { userId, userRoles, organizationId } = this.extractUserContext(user);
+    return this.taskService.bulkUpdateTasksWithRBAC(bulkUpdateDto, userId, userRoles, organizationId);
   }
 
   @Patch(':id')
@@ -100,9 +100,9 @@ export class TaskController extends BaseController {
     @Body() updateTaskDto: UpdateTaskDto,
     @User() user: AuthenticatedUser,
   ) {
-    const { userId, userRoles, organization } = this.extractUserContext(user);
+    const { userId, userRoles, organizationId } = this.extractUserContext(user);
     
-    return this.taskService.updateTaskWithRBAC(id, updateTaskDto, userId, userRoles, organization);
+    return this.taskService.updateTaskWithRBAC(id, updateTaskDto, userId, userRoles, organizationId);
   }
 
   @Get('debug')
@@ -113,8 +113,8 @@ export class TaskController extends BaseController {
       throw new ForbiddenException('Debug endpoints are not available in production');
     }
     
-    const { organization } = this.extractUserContext(user);
-    return this.taskService.debugTasks(organization);
+    const { organizationId } = this.extractUserContext(user);
+    return this.taskService.debugTasks(organizationId);
   }
 
   @Get('debug/:taskId')
@@ -125,9 +125,9 @@ export class TaskController extends BaseController {
       throw new ForbiddenException('Debug endpoints are not available in production');
     }
     
-    const { userId, userRoles, organization } = this.extractUserContext(user);
+    const { userId, userRoles, organizationId } = this.extractUserContext(user);
     
-    return this.taskService.debugTask(taskId, userId, userRoles, organization);
+    return this.taskService.debugTask(taskId, userId, userRoles, organizationId);
   }
 
   @Delete(':id')
@@ -141,8 +141,8 @@ export class TaskController extends BaseController {
     @Param('id', MongoIdPipe) id: string,
     @User() user: AuthenticatedUser,
   ) {
-    const { userId, userRoles, organization } = this.extractUserContext(user);
+    const { userId, userRoles, organizationId } = this.extractUserContext(user);
     
-    return this.taskService.deleteTaskWithRBAC(id, userId, userRoles, organization);
+    return this.taskService.deleteTaskWithRBAC(id, userId, userRoles, organizationId);
   }
 }

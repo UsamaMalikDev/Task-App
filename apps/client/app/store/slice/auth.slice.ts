@@ -9,7 +9,7 @@ export interface UserProfile {
   avatar: string;
   isVerified: string;
   disabled: boolean;
-  organization: string;
+  organizationId: string;
 }
 
 export interface AuthState {

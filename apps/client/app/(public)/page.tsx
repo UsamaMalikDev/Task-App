@@ -2,7 +2,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useAppDispatch } from "../store/hooks";
 import { AuthApi } from "../lib/auth.api";
@@ -14,9 +14,13 @@ import SigninForm from "./components/SigninForm";
 const SigninPage: React.FC = () => {
   const router = useRouter();
   const dispatch = useAppDispatch();
+  const searchParams = useSearchParams();
 
   const [formError, setFormError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  
+  // Get success message from URL params
+  const successMessage = searchParams.get('message');
 
   const handleSubmit = async (form: SignInPayloadType) => {
     setFormError(null);
@@ -25,7 +29,9 @@ const SigninPage: React.FC = () => {
       setSubmitting(true);
       console.log('Attempting login with:', form);
       const response = await AuthApi.login(form);
-      console.log('Login response:', response);
+      console.log('Login response:', 
+        
+      );
 
       const error = checkError([response]);
       if (error) {
@@ -34,9 +40,12 @@ const SigninPage: React.FC = () => {
         return;
       }
 
-      // Store user data in Redux (no localStorage)
+      // Store user data in Redux and localStorage (for refresh token)
       console.log('Setting user in Redux:', response.user);
       dispatch(setAuthUser(response.user));
+      
+      // Store user data in localStorage for refresh token
+      localStorage.setItem('userId', response.user._id);
 
       // Redirect to tasks page
       console.log('Redirecting to tasks page');
@@ -73,6 +82,17 @@ const SigninPage: React.FC = () => {
 
           {/* Form Container */}
           <div className="px-8 py-8">
+            {successMessage && (
+              <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-xl">
+                <div className="flex items-center space-x-3">
+                  <svg className="w-5 h-5 text-green-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                  <p className="text-green-700 text-sm font-medium">{successMessage}</p>
+                </div>
+              </div>
+            )}
+
             {formError && (
               <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl">
                 <div className="flex items-center space-x-3">

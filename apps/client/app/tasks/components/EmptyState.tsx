@@ -41,8 +41,8 @@ const EmptyState: React.FC<EmptyStateProps> = ({ scope, filters, onCreateTask })
       };
     } else {
       return {
-        title: "No tasks in your organization",
-        description: "Your organization doesn't have any tasks yet. Create the first task to get started with task management.",
+        title: "No tasks in your organizationId",
+        description: "Your organizationId doesn't have any tasks yet. Create the first task to get started with task management.",
         icon: (
           <svg className="h-16 w-16 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />

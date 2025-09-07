@@ -23,28 +23,28 @@ const testUsers = [
     email: 'user1@orga.com',
     password: 'password123',
     role: 'USER',
-    organization: 'orgA',
+    organizationId: 'orgA',
     expectedAccess: 'own tasks only'
   },
   {
     email: 'manager@orga.com',
     password: 'password123',
     role: 'MANAGER',
-    organization: 'orgA',
+    organizationId: 'orgA',
     expectedAccess: 'orgA tasks only'
   },
   {
     email: 'admin@orga.com',
     password: 'password123',
     role: 'ADMIN',
-    organization: 'orgA',
+    organizationId: 'orgA',
     expectedAccess: 'all tasks across all orgs'
   },
   {
     email: 'user1@orgb.com',
     password: 'password123',
     role: 'USER',
-    organization: 'orgB',
+    organizationId: 'orgB',
     expectedAccess: 'own tasks only'
   }
 ];
@@ -55,7 +55,7 @@ async function testRBAC() {
   for (const user of testUsers) {
     console.log(`\n👤 Testing ${user.role} (${user.email})`);
     console.log(`   Expected access: ${user.expectedAccess}`);
-    console.log(`   Organization: ${user.organization}`);
+    console.log(`   Organization: ${user.organizationId}`);
     
     try {
       // Login
@@ -75,7 +75,7 @@ async function testRBAC() {
       console.log(`   ✅ Login successful`);
       console.log(`   User ID: ${userData._id}`);
       console.log(`   Roles: ${userData.roles.join(', ')}`);
-      console.log(`   Organization: ${userData.organization || 'Not set'}`);
+      console.log(`   Organization: ${userData.organizationId || 'Not set'}`);
 
       // Test task access
       const tasksResponse = await axios.get(`${BASE_URL}/api/tasks`, {
@@ -88,8 +88,8 @@ async function testRBAC() {
       console.log(`   📋 Can access ${tasks.length} tasks`);
 
       // Analyze task access
-      const orgATasks = tasks.filter(t => t.organization === 'orgA');
-      const orgBTasks = tasks.filter(t => t.organization === 'orgB');
+      const orgATasks = tasks.filter(t => t.organizationId === 'orgA');
+      const orgBTasks = tasks.filter(t => t.organizationId === 'orgB');
       const ownTasks = tasks.filter(t => t.createdBy === userData._id);
 
       console.log(`   📊 Task breakdown:`);
@@ -147,7 +147,7 @@ async function testRBAC() {
 
   console.log('\n🎯 RBAC Test Summary:');
   console.log('   - USER: Should only see and manage their own tasks');
-  console.log('   - MANAGER: Should see and manage tasks within their organization');
+  console.log('   - MANAGER: Should see and manage tasks within their organizationId');
   console.log('   - ADMIN: Should see and manage tasks across all organizations');
   console.log('\n✅ RBAC testing completed!');
 }

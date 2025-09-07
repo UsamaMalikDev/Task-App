@@ -62,6 +62,9 @@ export class SeedService {
       }))
     );
 
+    this.logger.log(`Processing ${profilesWithHashedPasswords.length} profiles for seeding`);
+    this.logger.log('Sample profile data:', JSON.stringify(profilesWithHashedPasswords[0], null, 2));
+
     const createdProfiles = await this.profilesRepository.createAll(profilesWithHashedPasswords);
     this.logger.log(` Created ${createdProfiles.length} profiles`);
   }
@@ -71,9 +74,13 @@ export class SeedService {
 
     // Get all profiles to map emails to IDs
     const allProfiles = await this.profilesRepository.findAll({ filter: {} });
+    this.logger.log(`Found ${allProfiles.length} profiles for task assignment`);
+    
     const emailToIdMap = new Map(
       allProfiles.map(profile => [profile.email, profile._id.toString()])
     );
+    
+    this.logger.log('Email to ID mapping:', Object.fromEntries(emailToIdMap));
 
     // Process task data to replace email references with actual user IDs
     const processedTasks = taskSeedData.map(task => {
@@ -97,6 +104,9 @@ export class SeedService {
 
       return processedTask;
     });
+
+    this.logger.log(`Processing ${processedTasks.length} tasks for seeding`);
+    this.logger.log('Sample task data:', JSON.stringify(processedTasks[0], null, 2));
 
     const createdTasks = await this.taskRepository.createAll(processedTasks);
     this.logger.log(` Created ${createdTasks.length} tasks`);

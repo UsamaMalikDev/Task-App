@@ -17,7 +17,7 @@ import {
   ResetPasswordDto,
   SendResetPasswordEmailDto,
 } from './dto/passwors.dto';
-import { Response } from 'express';
+import { Response, Request } from 'express';
 
 export interface ITokenShape {
   createdOn: string;
@@ -122,7 +122,7 @@ export class AuthService {
         avatar: user.avatar,
         isVerified: user.isVerified,
         disabled: user.disabled,
-        organization: user.organization,
+        organizationId: user.organizationId,
       };
     } catch (error) {
       throw new UnauthorizedException('Invalid token');
@@ -199,7 +199,7 @@ export class AuthService {
           avatar: user.avatar,
           isVerified: user.isVerified,
           disabled: user.disabled,
-          organization: user.organization,
+          organizationId: user.organizationId,
         },
       };
     } catch (error) {
@@ -364,6 +364,115 @@ export class AuthService {
         },
         backendTokens,
       };
+    } catch (error) {
+      throw new BadRequestException(error.message);
+    }
+  }
+
+  async refreshTokenWithCookie(userId: string, res: Response): Promise<void> {
+    try {
+      const user = await this.profilesService.get(userId);
+
+      if (!user) {
+        throw new UnauthorizedException('User not found');
+      }
+
+      if (user.disabled) {
+        throw new BadRequestException(
+          'Your account has been disabled. Please contact support.',
+        );
+      }
+
+      const { _id, email, avatar, roles } = user;
+
+      const backendTokens = await this.createToken({
+        _id,
+        email,
+        avatar,
+        roles,
+      });
+
+      // Set the new token in HttpOnly cookie
+      const maxAge = Number(this.expiration);
+      this.setAuthCookie(res, backendTokens.token, maxAge);
+
+      // Return the response
+      res.status(200).json({
+        user: {
+          _id,
+          email,
+          roles,
+          name: user.name,
+          avatar: user.avatar,
+          isVerified: user.isVerified,
+          disabled: user.disabled,
+        },
+        backendTokens,
+      });
+    } catch (error) {
+      throw new BadRequestException(error.message);
+    }
+  }
+
+  async refreshTokenFromRequest(req: Request, res: Response): Promise<void> {
+    try {
+      // Extract token from cookie
+      const token = (req as any).cookies?.auth_token;
+      
+      if (!token) {
+        throw new UnauthorizedException('No token provided');
+      }
+
+      // Manually verify the token (even if expired)
+      let decodedToken;
+      try {
+        decodedToken = this.jwtService.verify(token, {
+          secret: this.configService.get('WEBTOKEN_SECRET_KEY'),
+          ignoreExpiration: true, // Allow expired tokens for refresh
+        });
+      } catch (error) {
+        throw new UnauthorizedException('Invalid token');
+      }
+
+      // Get user from token
+      const user = await this.profilesService.get(decodedToken._id);
+      if (!user) {
+        throw new UnauthorizedException('User not found');
+      }
+
+      if (user.disabled) {
+        throw new BadRequestException(
+          'Your account has been disabled. Please contact support.',
+        );
+      }
+
+      const { _id, email, avatar, roles } = user;
+
+      // Create new token
+      const backendTokens = await this.createToken({
+        _id,
+        email,
+        avatar,
+        roles,
+      });
+
+      // Set the new token in HttpOnly cookie
+      const maxAge = Number(this.expiration);
+      this.setAuthCookie(res, backendTokens.token, maxAge);
+
+      // Return the response
+      res.status(200).json({
+        user: {
+          _id,
+          email,
+          roles,
+          name: user.name,
+          avatar: user.avatar,
+          isVerified: user.isVerified,
+          disabled: user.disabled,
+        },
+        backendTokens,
+      });
     } catch (error) {
       throw new BadRequestException(error.message);
     }

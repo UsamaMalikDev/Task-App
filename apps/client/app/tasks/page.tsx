@@ -16,7 +16,7 @@ import { checkError } from "../utils/helpers";
 import { useApiOperation } from "../hooks/useApiOperations";
 import { setAuthUser } from "../store/slice/auth.slice";
 import { selectAuthUser } from "../store/selectors/auth.selector";
-import { useNotification } from "../contexts/NotificationContext";
+import { useNotification } from "../hooks/useNotification";
 import TasksPageHeader from "./components/TaskPageHeader";
 import TasksContent from "./components/TaskContent";
 import TaskForm from "./components/TaskForm";

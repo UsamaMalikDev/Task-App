@@ -3,8 +3,10 @@
 
 import React, { useMemo, useState, FormEvent } from "react";
 import { SignupFormData } from "@/app/types";
+import { ORGANIZATIONS } from "@/app/utils/constants";
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const PHONE_REGEX = /^\+1\d{10}$/;
 
 interface SignupFormProps {
   onSubmit: (form: SignupFormData) => Promise<void>;
@@ -15,7 +17,7 @@ const SignupForm: React.FC<SignupFormProps> = ({ onSubmit, submitting }) => {
   const [form, setForm] = useState<SignupFormData>({
     name: "",
     email: "",
-    company: "",
+    organizationId: "",
     phone: "",
     password: "",
     confirmPassword: "",
@@ -35,8 +37,9 @@ const SignupForm: React.FC<SignupFormProps> = ({ onSubmit, submitting }) => {
     if (!form.name.trim()) errors.name = "Name is required";
     if (!form.email) errors.email = "Email is required";
     else if (!EMAIL_REGEX.test(form.email)) errors.email = "Enter a valid email";
-    if (!form.company.trim()) errors.company = "Company is required";
+    if (!form.organizationId.trim()) errors.organizationId = "Organization is required";
     if (!form.phone.trim()) errors.phone = "Phone is required";
+    else if (!PHONE_REGEX.test(form.phone)) errors.phone = "Please enter a valid US phone number (e.g., +1234567890)";
     if (!form.password) errors.password = "Password is required";
     else if (form.password.length < 8) errors.password = "Password must be at least 8 characters";
     if (!form.confirmPassword) errors.confirmPassword = "Confirm your password";
@@ -51,7 +54,7 @@ const SignupForm: React.FC<SignupFormProps> = ({ onSubmit, submitting }) => {
 
   const handleChange =
     (field: keyof SignupFormData) =>
-    (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
       const value = e.target.type === "checkbox" ? (e.target as HTMLInputElement).checked : e.target.value;
       setForm((prev: any) => ({ ...prev, [field]: value }));
       setLocalError(null);
@@ -144,10 +147,10 @@ const SignupForm: React.FC<SignupFormProps> = ({ onSubmit, submitting }) => {
           {renderError(validation.errors.email)}
         </div>
 
-        {/* Company Field */}
+        {/* Organization Field */}
         <div className="space-y-2">
           <label htmlFor="company" className="block text-sm font-semibold text-gray-700">
-            Company <span className="text-red-500">*</span>
+            Organization <span className="text-red-500">*</span>
           </label>
           <div className="relative">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -155,17 +158,20 @@ const SignupForm: React.FC<SignupFormProps> = ({ onSubmit, submitting }) => {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
               </svg>
             </div>
-            <input
-              id="company"
-              value={form.company}
-              onChange={handleChange("company")}
-              onFocus={() => setFocusedField("company")}
+            <select
+              id="organizationId"
+              value={form.organizationId}
+              onChange={handleChange("organizationId")}
+              onFocus={() => setFocusedField("organizationId")}
               onBlur={() => setFocusedField(null)}
-              placeholder="Your company name"
-              className={`pl-10 ${getInputClasses(!!validation.errors.company, "company")}`}
-            />
+              className={`pl-10 ${getInputClasses(!!validation.errors.organizationId, "organizationId")}`}
+            >
+              <option value="">Select an organization</option>
+              <option value={ORGANIZATIONS.ORG_A.id}>{ORGANIZATIONS.ORG_A.displayName}</option>
+              <option value={ORGANIZATIONS.ORG_B.id}>{ORGANIZATIONS.ORG_B.displayName}</option>
+            </select>
           </div>
-          {renderError(validation.errors.company)}
+          {renderError(validation.errors.organizationId)}
         </div>
 
         {/* Phone Field */}
@@ -185,7 +191,7 @@ const SignupForm: React.FC<SignupFormProps> = ({ onSubmit, submitting }) => {
               onChange={handleChange("phone")}
               onFocus={() => setFocusedField("phone")}
               onBlur={() => setFocusedField(null)}
-              placeholder="(555) 000-0000"
+              placeholder="+1234567890"
               className={`pl-10 ${getInputClasses(!!validation.errors.phone, "phone")}`}
             />
           </div>

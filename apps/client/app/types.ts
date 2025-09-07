@@ -37,7 +37,7 @@ export type SignUpPayloadType = {
   userInfo: {
     name: string;
     email: string;
-    company: string;
+    organizationId: string;
     phone: string;
     password: string;
     confirmPassword: string;
@@ -112,7 +112,7 @@ export type Task = {
   status: TaskStatus;
   priority: TaskPriority;
   dueDate: string;
-  organization: string;
+  organizationId: string;
   createdBy: string;
   assignedTo?: string;
   tags: string[];
@@ -177,7 +177,7 @@ export type TaskScope = 'my' | 'org';
 export interface SignupFormData {
   name: string;
   email: string;
-  company: string;
+  organizationId: string;
   phone: string;
   password: string;
   confirmPassword: string;

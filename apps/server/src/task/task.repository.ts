@@ -105,12 +105,12 @@ export class TaskRepository {
   }
 
   async findWithPagination(
-    organization: string,
+    organizationId: string,
     query: any,
     limit: number,
     cursor?: string,
   ): Promise<{ tasks: TaskDocument[]; nextCursor?: string; hasMore: boolean; totalPages?: number; total?: number }> {
-    const filter: any = { organization };
+    const filter: any = { organizationId };
 
     if (query.status) filter.status = query.status;
     if (query.priority) filter.priority = query.priority;
@@ -144,7 +144,7 @@ export class TaskRepository {
       const skip = (query.page - 1) * limit;
       
       console.log(' Task Repository Query Debug:', {
-        organization,
+        organizationId,
         filter: JSON.stringify(filter, null, 2),
         sort: JSON.stringify(sort, null, 2),
         page: query.page,
@@ -206,15 +206,15 @@ export class TaskRepository {
     return this.taskModel.find({ _id: { $in: objectIds } }).exec();
   }
 
-  async findOverdueTasks(organization?: string): Promise<TaskDocument[]> {
+  async findOverdueTasks(organizationId?: string): Promise<TaskDocument[]> {
     const filter: any = {
       dueDate: { $lt: new Date() },
       status: { $nin: [TaskStatus.COMPLETED, TaskStatus.CANCELLED] },
       isOverdue: false,
     };
 
-    if (organization) {
-      filter.organization = organization;
+    if (organizationId) {
+      filter.organizationId = organizationId;
     }
 
     return this.taskModel.find(filter).exec();

@@ -2,7 +2,7 @@ export interface AuthenticatedUser {
   _id: string;
   email: string;
   roles: string[];
-  organization?: string;
+  organizationId?: string;
   avatar?: string;
   name?: string;
   isVerified?: string;
@@ -12,7 +12,7 @@ export interface AuthenticatedUser {
 export interface UserContext {
   userId: string;
   userRoles: string[];
-  organization: string;
+  organizationId: string;
 }
 
 export interface RBACContext extends UserContext {

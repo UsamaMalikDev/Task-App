@@ -73,7 +73,7 @@ async function testRBAC() {
       console.log(`   ✅ Login successful`);
       console.log(`   User ID: ${user._id}`);
       console.log(`   Roles: ${user.roles?.join(', ') || 'None'}`);
-      console.log(`   Organization: ${user.organization || 'Not set'}`);
+      console.log(`   Organization: ${user.organizationId || 'Not set'}`);
 
       // Step 2: Get tasks
       console.log('   📋 Fetching tasks...');
@@ -87,8 +87,8 @@ async function testRBAC() {
       console.log(`   ✅ Retrieved ${tasks.length} tasks`);
 
       // Step 3: Analyze task access
-      const orgATasks = tasks.filter(t => t.organization === 'orgA');
-      const orgBTasks = tasks.filter(t => t.organization === 'orgB');
+      const orgATasks = tasks.filter(t => t.organizationId === 'orgA');
+      const orgBTasks = tasks.filter(t => t.organizationId === 'orgB');
       const ownTasks = tasks.filter(t => t.createdBy === user._id);
 
       console.log(`   📊 Task breakdown:`);
@@ -150,7 +150,7 @@ async function testRBAC() {
 
   console.log('\n🎯 RBAC Test Summary:');
   console.log('   - CONTRACTOR: Should only see their own tasks');
-  console.log('   - MANAGER: Should see all tasks in their organization');
+  console.log('   - MANAGER: Should see all tasks in their organizationId');
   console.log('   - ADMIN: Should see all tasks across all organizations');
   console.log('\n✅ RBAC testing completed!');
 }

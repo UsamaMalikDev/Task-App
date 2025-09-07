@@ -9,7 +9,7 @@ export abstract class BaseController {
     return {
       userId: user._id,
       userRoles: user.roles || [],
-      organization: user.organization
+      organizationId: user.organizationId
     };
   }
 

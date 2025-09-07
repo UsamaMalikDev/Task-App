@@ -31,7 +31,7 @@ export class TaskService {
     task: TaskDocument,
     operation: 'read' | 'write' | 'delete'
   ): { allowed: boolean; reason?: string } {
-    const taskOrganizationId = task.organization;
+    const taskOrganizationId = task.organizationId;
     const taskCreatedBy = task.createdBy;
 
     this.logger.debug(`RBAC Check: ${operation}`, {
@@ -46,7 +46,7 @@ export class TaskService {
         return { allowed: true };
 
       case 'MANAGER':
-        // Manager can access tasks within their organization
+        // Manager can access tasks within their organizationId
         // Convert both to strings to handle ObjectId vs string comparison
         const userOrgIdStr = String(userOrganizationId);
         const taskOrgIdStr = String(taskOrganizationId);
@@ -56,7 +56,7 @@ export class TaskService {
         }
         return { 
           allowed: false, 
-          reason: 'Manager can only access tasks within their organization' 
+          reason: 'Manager can only access tasks within their organizationId' 
         };
 
       case 'USER':
@@ -83,11 +83,11 @@ export class TaskService {
     }
   }
 
-  async createTask(createTaskDto: CreateTaskDto, organization: string, createdBy: string): Promise<TaskDocument> {
+  async createTask(createTaskDto: CreateTaskDto, organizationId: string, createdBy: string): Promise<TaskDocument> {
     try {
       const taskData = {
         ...createTaskDto,
-        organization,
+        organizationId,
         createdBy,
         dueDate: new Date(createTaskDto.dueDate),
         completedAt: createTaskDto.status === TaskStatus.COMPLETED ? new Date() : undefined,
@@ -95,12 +95,12 @@ export class TaskService {
 
       const task = await this.taskRepository.create(taskData);
       
-      // Invalidate cache for this organization
+      // Invalidate cache for this organizationId
       await this.cacheService.deletePattern(
-        this.cacheService.generateTaskInvalidationPattern(organization)
+        this.cacheService.generateTaskInvalidationPattern(organizationId)
       );
       
-      this.logger.log(`Task created successfully: ${task._id}`, { taskId: task._id, organization });
+      this.logger.log(`Task created successfully: ${task._id}`, { taskId: task._id, organizationId });
       return task;
     } catch (error) {
       this.logger.error('Error creating task', error);
@@ -109,7 +109,7 @@ export class TaskService {
   }
 
   async getTasksWithRBAC(
-    organization: string, 
+    organizationId: string, 
     query: TaskQueryDto, 
     userId: string, 
     userRoles: string[]
@@ -124,7 +124,7 @@ export class TaskService {
       const userRole = this.getUserRole(userRoles);
       
       // Generate cache key with user context
-      const cacheKey = `${this.cacheService.generateTaskCacheKey(organization, query)}_${userId}_${userRole}`;
+      const cacheKey = `${this.cacheService.generateTaskCacheKey(organizationId, query)}_${userId}_${userRole}`;
       
       // Tryss to get from cache first
       const cachedResult = await this.cacheService.get<{
@@ -150,11 +150,11 @@ export class TaskService {
           filter = {};
           break;
         case 'MANAGER':
-          filter = { organization };
+          filter = { organizationId };
           break;
         case 'USER':
         default:
-          filter = { organization };
+          filter = { organizationId };
           break;
       }
 
@@ -208,7 +208,7 @@ export class TaskService {
     }
   }
 
-  async getTasks(organization: string, query: TaskQueryDto): Promise<{
+  async getTasks(organizationId: string, query: TaskQueryDto): Promise<{
     tasks: TaskDocument[];
     nextCursor?: string;
     hasMore: boolean;
@@ -217,7 +217,7 @@ export class TaskService {
   }> {
     try {
       // Generate cache key
-      const cacheKey = this.cacheService.generateTaskCacheKey(organization, query);
+      const cacheKey = this.cacheService.generateTaskCacheKey(organizationId, query);
 
       const cachedResult = await this.cacheService.get<{
         tasks: TaskDocument[];
@@ -227,8 +227,8 @@ export class TaskService {
         total?: number;
       }>(cacheKey);
       if (cachedResult) {
-        this.logger.log(`Tasks retrieved from cache for organization: ${organization}`, {
-          organization,
+        this.logger.log(`Tasks retrieved from cache for organizationId: ${organizationId}`, {
+          organizationId,
           count: cachedResult.tasks.length,
           hasMore: cachedResult.hasMore,
         });
@@ -237,14 +237,14 @@ export class TaskService {
 
       // If not in cache, get form DB
       this.logger.log(`Fetching tasks from database`, {
-        organization,
+        organizationId,
         query: JSON.stringify(query),
         limit: query.limit || 20,
         cursor: query.cursor,
       });
 
       const result = await this.taskRepository.findWithPagination(
-        organization,
+        organizationId,
         query,
         query.limit || 20,
         query.cursor,
@@ -253,8 +253,8 @@ export class TaskService {
       // Cache the result for 5 minutes
       await this.cacheService.set(cacheKey, result, 300);
 
-      this.logger.log(`Tasks retrieved from database for organization: ${organization}`, {
-        organization,
+      this.logger.log(`Tasks retrieved from database for organizationId: ${organizationId}`, {
+        organizationId,
         count: result.tasks.length,
         hasMore: result.hasMore,
         query: JSON.stringify(query),
@@ -267,20 +267,20 @@ export class TaskService {
     }
   }
 
-  async updateTask(taskId: string, updateTaskDto: UpdateTaskDto, organization: string): Promise<TaskDocument> {
+  async updateTask(taskId: string, updateTaskDto: UpdateTaskDto, organizationId: string): Promise<TaskDocument> {
     try {
 
       const existingTask = await this.taskRepository.findById(taskId);
       if (!existingTask) throw new NotFoundException('Task not found');
 
       this.logger.log(`Updating task ${taskId}`, {
-        taskOrganizationId: existingTask.organization,
+        taskOrganizationId: existingTask.organizationId,
         taskCreatedBy: existingTask.createdBy,
-        userOrganizationId: organization,
+        userOrganizationId: organizationId,
       });
 
-      if (existingTask.organization !== organization && existingTask.createdBy !== organization) {
-        throw new BadRequestException('Task does not belong to this organization');
+      if (existingTask.organizationId !== organizationId && existingTask.createdBy !== organizationId) {
+        throw new BadRequestException('Task does not belong to this organizationId');
       }
 
       const updateData: any = { ...updateTaskDto };
@@ -297,10 +297,10 @@ export class TaskService {
       const updatedTask = await this.taskRepository.update(taskId, updateData);
 
       await this.cacheService.deletePattern(
-        this.cacheService.generateTaskInvalidationPattern(organization)
+        this.cacheService.generateTaskInvalidationPattern(organizationId)
       );
       
-      this.logger.log(`Task updated successfully: ${taskId}`, { taskId, organization });
+      this.logger.log(`Task updated successfully: ${taskId}`, { taskId, organizationId });
       return updatedTask;
     } catch (error) {
       if (error instanceof NotFoundException || error instanceof BadRequestException) {
@@ -350,7 +350,7 @@ export class TaskService {
 
       const updatedTask = await this.taskRepository.update(taskId, updateData);
       
-      // remove cache for this organization
+      // remove cache for this organizationId
       await this.cacheService.deletePattern(
         this.cacheService.generateTaskInvalidationPattern(userOrganizationId)
       );
@@ -372,7 +372,7 @@ export class TaskService {
     }
   }
 
-  async bulkUpdateTasks(bulkUpdateDto: BulkUpdateTaskDto, organization: string): Promise<TaskDocument[]> {
+  async bulkUpdateTasks(bulkUpdateDto: BulkUpdateTaskDto, organizationId: string): Promise<TaskDocument[]> {
     try {
       // Get all tasks by IDs first
       const tasks = await this.taskRepository.findAll({
@@ -397,14 +397,14 @@ export class TaskService {
 
       const updatedTasks = await this.taskRepository.bulkUpdate(bulkUpdateDto.taskIds, updateData);
       
-      // Invalidate cache for this organization
+      // Invalidate cache for this organizationId
       await this.cacheService.deletePattern(
-        this.cacheService.generateTaskInvalidationPattern(organization)
+        this.cacheService.generateTaskInvalidationPattern(organizationId)
       );
       
       this.logger.log(`Bulk update completed for ${updatedTasks.length} tasks`, {
         taskIds: bulkUpdateDto.taskIds,
-        organization,
+        organizationId,
       });
       return updatedTasks;
     } catch (error) {
@@ -464,7 +464,7 @@ export class TaskService {
       
       const updatedTasks = await this.taskRepository.bulkUpdate(accessibleTaskIds, updateData);
       
-      // Invalidate cache for this organization
+      // Invalidate cache for this organizationId
       await this.cacheService.deletePattern(
         this.cacheService.generateTaskInvalidationPattern(userOrganizationId)
       );
@@ -486,16 +486,16 @@ export class TaskService {
     }
   }
 
-  async getTaskById(taskId: string, organization: string): Promise<TaskDocument> {
+  async getTaskById(taskId: string, organizationId: string): Promise<TaskDocument> {
     try {
       const task = await this.taskRepository.findById(taskId);
       if (!task) {
         throw new NotFoundException('Task not found');
       }
 
-      // Check if task belongs to organization OR was created by the user
-      if (task.organization !== organization && task.createdBy !== organization) {
-        throw new BadRequestException('Task does not belong to this organization');
+      // Check if task belongs to organizationId OR was created by the user
+      if (task.organizationId !== organizationId && task.createdBy !== organizationId) {
+        throw new BadRequestException('Task does not belong to this organizationId');
       }
 
       return task;
@@ -508,34 +508,34 @@ export class TaskService {
     }
   }
 
-  async deleteTask(taskId: string, organization: string): Promise<void> {
+  async deleteTask(taskId: string, organizationId: string): Promise<void> {
     try {
       const task = await this.taskRepository.findById(taskId);
       if (!task) {
         throw new NotFoundException('Task not found');
       }
 
-      // Check if task belongs to organization OR was created by the user
+      // Check if task belongs to organizationId OR was created by the user
       this.logger.log(`Deleting task ${taskId}`, {
-        taskOrganizationId: task.organization,
+        taskOrganizationId: task.organizationId,
         taskCreatedBy: task.createdBy,
-        userOrganizationId: organization,
+        userOrganizationId: organizationId,
         taskId: task._id,
         taskTitle: task.title
       });
 
-      if (task.organization !== organization && task.createdBy !== organization) {
+      if (task.organizationId !== organizationId && task.createdBy !== organizationId) {
         this.logger.error(`Task ownership validation failed`, {
-          taskOrganizationId: task.organization,
+          taskOrganizationId: task.organizationId,
           taskCreatedBy: task.createdBy,
-          userOrganizationId: organization,
+          userOrganizationId: organizationId,
           taskId: task._id
         });
-        throw new BadRequestException('Task does not belong to this organization');
+        throw new BadRequestException('Task does not belong to this organizationId');
       }
 
       await this.taskRepository.delete(taskId);
-      this.logger.log(`Task deleted successfully: ${taskId}`, { taskId, organization });
+      this.logger.log(`Task deleted successfully: ${taskId}`, { taskId, organizationId });
     } catch (error) {
       if (error instanceof NotFoundException || error instanceof BadRequestException) {
         throw error;
@@ -570,7 +570,7 @@ export class TaskService {
 
       await this.taskRepository.delete(taskId);
       
-      // Invalidate cache for this organization
+      // Invalidate cache for this organizationId
       await this.cacheService.deletePattern(
         this.cacheService.generateTaskInvalidationPattern(userOrganizationId)
       );
@@ -592,10 +592,10 @@ export class TaskService {
     }
   }
 
-  async getOverdueTasks(organization?: string): Promise<TaskDocument[]> {
+  async getOverdueTasks(organizationId?: string): Promise<TaskDocument[]> {
     try {
-      const overdueTasks = await this.taskRepository.findOverdueTasks(organization);
-      this.logger.log(`Found ${overdueTasks.length} overdue tasks`, { organization });
+      const overdueTasks = await this.taskRepository.findOverdueTasks(organizationId);
+      this.logger.log(`Found ${overdueTasks.length} overdue tasks`, { organizationId });
       return overdueTasks;
     } catch (error) {
       this.logger.error('Error retrieving overdue tasks', error);
@@ -631,7 +631,7 @@ export class TaskService {
           title: task.title,
           status: task.status,
           priority: task.priority,
-          organization: task.organization,
+          organizationId: task.organizationId,
           createdBy: task.createdBy,
           assignedTo: task.assignedTo,
           dueDate: task.dueDate,
@@ -640,7 +640,7 @@ export class TaskService {
         user: {
           _id: userId,
           roles: userRoles,
-          organization: userOrganizationId,
+          organizationId: userOrganizationId,
           userRole: userRole
         },
         permissions: {
@@ -650,11 +650,11 @@ export class TaskService {
         },
         comparison: {
           userIdMatchesCreatedBy: userId === task.createdBy,
-          organizationIdMatches: userOrganizationId === task.organization,
+          organizationIdMatches: userOrganizationId === task.organizationId,
           userId: userId,
           taskCreatedBy: task.createdBy,
           userOrganizationId: userOrganizationId,
-          taskOrganizationId: task.organization
+          taskOrganizationId: task.organizationId
         }
       };
     } catch (error) {
@@ -663,25 +663,25 @@ export class TaskService {
     }
   }
 
-  async debugTasks(organization: string): Promise<any> {
+  async debugTasks(organizationId: string): Promise<any> {
     try {
-      // Get all tasks for this organization
+      // Get all tasks for this organizationId
       const allTasks = await this.taskRepository.findAll({
-        filter: { organization }
+        filter: { organizationId }
       });
 
       // Get tasks created by this user
       const createdTasks = await this.taskRepository.findAll({
-        filter: { organization, createdBy: organization }
+        filter: { organizationId, createdBy: organizationId }
       });
 
       // Get tasks assigned to this user
       const assignedTasks = await this.taskRepository.findAll({
-        filter: { organization, assignedTo: organization }
+        filter: { organizationId, assignedTo: organizationId }
       });
 
       return {
-        organization,
+        organizationId,
         totalTasks: allTasks.length,
         createdTasksCount: createdTasks.length,
         assignedTasksCount: assignedTasks.length,
@@ -690,7 +690,7 @@ export class TaskService {
           title: task.title,
           status: task.status,
           priority: task.priority,
-          organization: task.organization,
+          organizationId: task.organizationId,
           createdBy: task.createdBy,
           assignedTo: task.assignedTo,
           dueDate: task.dueDate,
@@ -701,7 +701,7 @@ export class TaskService {
           title: task.title,
           status: task.status,
           priority: task.priority,
-          organization: task.organization,
+          organizationId: task.organizationId,
           createdBy: task.createdBy,
           assignedTo: task.assignedTo,
           dueDate: task.dueDate,
@@ -712,7 +712,7 @@ export class TaskService {
           title: task.title,
           status: task.status,
           priority: task.priority,
-          organization: task.organization,
+          organizationId: task.organizationId,
           createdBy: task.createdBy,
           assignedTo: task.assignedTo,
           dueDate: task.dueDate,

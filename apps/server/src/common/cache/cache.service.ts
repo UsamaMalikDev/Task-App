@@ -71,12 +71,12 @@ export class CacheService {
     }
   }
 
-  generateTaskCacheKey(organization: string, query: unknown): string {
+  generateTaskCacheKey(organizationId: string, query: unknown): string {
     const queryString = JSON.stringify(query);
-    return `tasks:${organization}:${Buffer.from(queryString).toString('base64')}`;
+    return `tasks:${organizationId}:${Buffer.from(queryString).toString('base64')}`;
   }
 
-  generateTaskInvalidationPattern(organization: string): string {
-    return `tasks:${organization}:*`;
+  generateTaskInvalidationPattern(organizationId: string): string {
+    return `tasks:${organizationId}:*`;
   }
 }

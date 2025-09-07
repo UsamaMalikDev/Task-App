@@ -25,10 +25,8 @@ export class OverdueTaskScheduler {
 
       this.logger.log(`Successfully marked ${taskIds.length} tasks as overdue`, {
         taskIds,
-        organizationIds: [...new Set(overdueTasks.map(task => task.organization))],
+        organizationIds: [...new Set(overdueTasks.map(task => task.organizationId))],
       });
-
-      // Log task statistics
       const stats = await this.taskService.getTaskStats();
       this.logger.log('Task statistics', stats);
 
@@ -36,8 +34,6 @@ export class OverdueTaskScheduler {
       this.logger.error('Error in overdue task scheduler', error);
     }
   }
-
-  // Manual trigger for testing
   async triggerOverdueTaskCheck(): Promise<void> {
     this.logger.log('Manually triggering overdue task check...');
     await this.handleOverdueTasks();

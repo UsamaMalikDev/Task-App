@@ -17,6 +17,9 @@ export class Profile extends BaseModel {
   @Prop({ required: true, type: String })
   name: string;
 
+  @Prop({ required: true, type: String })
+  phone: string;
+
   @Prop({
     required: true,
     enum: PROFILE_STATUS,
@@ -40,7 +43,7 @@ export class Profile extends BaseModel {
   roles: APP_ROLES[];
 
   @Prop({ required: false, type: String })
-  organization?: string;
+  organizationId?: string;
 
   @Prop({ required: false, type: Boolean, default: false })
   disabled?: boolean;
@@ -49,5 +52,5 @@ export class Profile extends BaseModel {
 export const ProfileModel = SchemaFactory.createForClass(Profile);
 
 ProfileModel.index({ email: 1 }, { unique: true });
-ProfileModel.index({ company: 1 });
+ProfileModel.index({ organizationId: 1 });
 ProfileModel.index({ isVerified: 1 });

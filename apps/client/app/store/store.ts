@@ -13,18 +13,20 @@ import {
 import storage from "./storage";
 import authReducer from "./slice/auth.slice";
 import { profileReducer } from "./slice/profile.slice";
+import { notificationReducer } from "./slice/notification.slice";
 
 // Combine all reducers into a root reducer
 const reducers = combineReducers({
   auth: authReducer,
   profile: profileReducer,
+  notification: notificationReducer,
 });
 
 // Configuration for Redux Persist
 const persistConfig = {
   key: "root",
   storage,
-  whitelist: ["auth", "profile"],
+  whitelist: ["profile"],
   version: 1,
 };
 

@@ -28,7 +28,7 @@ const SignupPage: React.FC = () => {
         userInfo: {
           name: form.name,
           email: form.email,
-          company: form.company,
+          organizationId: form.organizationId,
           phone: form.phone,
           password: form.password,
           confirmPassword: form.confirmPassword,
@@ -47,16 +47,11 @@ const SignupPage: React.FC = () => {
         return;
       }
 
-      setAuthCookie(authData);
-      dispatch(setPersistedAuthData(authData));
-
-      const { redirectTo, valid } = accessValidation(authData);
-      if (!valid && redirectTo) {
-        router.push(redirectTo);
-        return;
-      }
-
-      router.push("/tasks");
+      // Don't set auth cookies or dispatch auth data after signup
+      // User needs to sign in manually after account creation
+      
+      // Redirect to signin page with success message
+      router.push("/?message=Account created successfully! Please sign in.");
     } catch (err) {
       setFormError("Something went wrong. Please try again.");
     } finally {

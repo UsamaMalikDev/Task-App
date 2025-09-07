@@ -18,6 +18,9 @@ export default function useLogout() {
       // Clear Redux state
       dispatch(removeAuthUser());
       dispatch(removeProfile());
+      
+      // Clear localStorage
+      localStorage.removeItem('userId');
 
       // Redirect to home page
       router.push("/");
@@ -26,6 +29,7 @@ export default function useLogout() {
       // Still clear local state even if API call fails
       dispatch(removeAuthUser());
       dispatch(removeProfile());
+      localStorage.removeItem('userId');
       router.push("/");
     }
   };

@@ -125,11 +125,11 @@ export class ProfilesService {
     }
   }
 
-  getAllCompanyProfiles(companyId: string): Promise<ProfileDocument[]> {
+  getAllOrganizationProfiles(organizationId: string): Promise<ProfileDocument[]> {
     try {
       const payload: FindPayloadType<Profile> = {
         filter: {
-          company: companyId,
+          organizationId: organizationId,
         },
       };
       return this.profileRepository.findAll(payload);

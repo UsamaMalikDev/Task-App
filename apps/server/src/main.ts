@@ -36,14 +36,14 @@ async function bootstrap() {
     next();
   });
   
-  // Seed database on startup - temporarily disabled for debugging
-  // try {
-  //   const seedService = app.get(SeedService);
-  //   await seedService.seedDatabase();
-  // } catch (error) {
-  //   console.error('Seed service error:', error);
-  //   // Continue startup even if seeding fails
-  // }
+  // Seed database on startup
+  try {
+    const seedService = app.get(SeedService);
+    await seedService.seedDatabase();
+  } catch (error) {
+    console.error('Seed service error:', error);
+    // Continue startup even if seeding fails
+  }
   
   await app.listen(process.env.PORT ?? 3000);
 }

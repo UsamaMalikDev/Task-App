@@ -2,6 +2,7 @@ import { ApiProperty } from '@nestjs/swagger';
 import {
   IsEmail,
   IsEnum,
+  IsIn,
   IsNotEmpty,
   IsPhoneNumber,
   IsString,
@@ -9,6 +10,7 @@ import {
   MaxLength,
   MinLength,
 } from 'class-validator';
+import { VALID_ORGANIZATION_IDS } from 'src/utils/organizations';
 
 export class RegisterProfileDto {
   @ApiProperty({
@@ -18,11 +20,11 @@ export class RegisterProfileDto {
   @IsNotEmpty()
   email: string;
 
-  @ApiProperty({ type: String, example: 'FUTURENOSTICS_OFFICIAL' })
+  @ApiProperty({ type: String, example: 'org_a_001' })
   @IsString()
   @IsNotEmpty()
-  @MaxLength(100)
-  company: string;
+  @IsIn(VALID_ORGANIZATION_IDS, { message: 'Invalid organization ID' })
+  organizationId: string;
 
   @ApiProperty({
     required: true, 
