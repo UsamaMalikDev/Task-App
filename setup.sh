@@ -97,8 +97,8 @@ else
 fi
 
 # Check worker
-if curl -f http://localhost:3002/health > /dev/null 2>&1; then
-    echo "✅ Worker is running at http://localhost:3002"
+if curl -f http://localhost:3003/health > /dev/null 2>&1; then
+    echo "✅ Worker is running at http://localhost:3003"
 else
     echo "⚠️  Worker might still be starting up"
 fi
@@ -110,7 +110,7 @@ echo ""
 echo "📱 Access your application:"
 echo "   • Client:     http://localhost:3000"
 echo "   • Server API: http://localhost:3001"
-echo "   • Worker:     http://localhost:3002"
+echo "   • Worker:     http://localhost:3003"
 echo "   • MongoDB:    localhost:27017"
 echo "   • Redis:      localhost:6379"
 echo ""

@@ -65,8 +65,13 @@ services:
     restart: unless-stopped
     environment:
       NODE_ENV: ${NODE_ENV:-production}
+      PORT: ${WORKER_PORT:-3003}
       MONGODB_URI: mongodb://${MONGO_ROOT_USERNAME:-admin}:${MONGO_ROOT_PASSWORD:-password}@mongodb:27017/${MONGO_DATABASE:-testdb}?authSource=admin
       REDIS_URL: redis://redis:6379
+      OVERDUE_TASK_CHECK_INTERVAL: ${OVERDUE_TASK_CHECK_INTERVAL:-*/1 * * * *}
+      ENABLE_OVERDUE_TASK_SCHEDULER: ${ENABLE_OVERDUE_TASK_SCHEDULER:-true}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      ENABLE_CONSOLE_LOGGING: ${ENABLE_CONSOLE_LOGGING:-true}
     depends_on:
       - mongodb
       - redis

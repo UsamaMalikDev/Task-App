@@ -9,7 +9,7 @@ Test_BE_Project/
 ├── apps/                   # Application services
 │   ├── client/            # Next.js frontend (Port: 3000)
 │   ├── server/            # NestJS backend API (Port: 3001)
-│   └── worker/            # NestJS background worker (Port: 3002)
+│   └── worker/            # NestJS background worker (Port: 3003)
 ├── packages/              # Shared packages
 │   ├── shared-types/      # Common TypeScript types
 │   └── shared-utils/      # Common utilities
@@ -44,7 +44,7 @@ npm run dev
 ### 3. Access Services
 - **Client**: http://localhost:3000
 - **Server API**: http://localhost:3001
-- **Worker**: http://localhost:3002
+- **Worker**: http://localhost:3003
 - **MongoDB**: localhost:27017
 - **Redis**: localhost:6379
 

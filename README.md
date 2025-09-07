@@ -26,7 +26,7 @@ After running the setup script, you can access:
 
 - **Client (Frontend)**: http://localhost:3000
 - **Server API**: http://localhost:3001
-- **Worker Service**: http://localhost:3002
+- **Worker Service**: http://localhost:3003
 - **MongoDB**: localhost:27017
 - **Redis**: localhost:6379
 
@@ -37,7 +37,7 @@ Task App/
 ├── apps/                   # Application services
 │   ├── client/            # Next.js frontend (Port: 3000)
 │   ├── server/            # NestJS backend API (Port: 3001)
-│   └── worker/            # NestJS background worker (Port: 3002)
+│   └── worker/            # NestJS background worker (Port: 3003)
 ├── packages/              # Shared packages
 │   ├── shared-types/      # Common TypeScript types
 │   └── shared-utils/      # Common utilities
@@ -159,7 +159,7 @@ npm run docker:up
 ```
 
 ### Port conflicts?
-Make sure ports 3000, 3001, 3002, 27017, and 6379 are available.
+Make sure ports 3000, 3001, 3003, 27017, and 6379 are available.
 
 ### Docker issues?
 ```bash

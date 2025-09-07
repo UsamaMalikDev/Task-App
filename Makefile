@@ -138,4 +138,4 @@ health: ## Check health of all services
 	@echo "Checking server health..."
 	curl -f http://localhost:3001/health || echo "Server not responding"
 	@echo "Checking worker health..."
-	curl -f http://localhost:3002/health || echo "Worker not responding"
+	curl -f http://localhost:3003/health || echo "Worker not responding"

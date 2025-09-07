@@ -24,6 +24,13 @@ services:
       dockerfile: apps/worker/Dockerfile.dev
     environment:
       NODE_ENV: development
+      PORT: 3003
+      MONGODB_URI: mongodb://admin:password@mongodb:27017/testdb?authSource=admin
+      REDIS_URL: redis://redis:6379
+      OVERDUE_TASK_CHECK_INTERVAL: "*/1 * * * *"
+      ENABLE_OVERDUE_TASK_SCHEDULER: "true"
+      LOG_LEVEL: debug
+      ENABLE_CONSOLE_LOGGING: "true"
     volumes:
       - .:/app
       - /app/node_modules

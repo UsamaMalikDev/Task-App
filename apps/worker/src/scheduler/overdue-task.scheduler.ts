@@ -1,4 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { TaskService } from '../task/task.service';
 
@@ -6,11 +7,21 @@ import { TaskService } from '../task/task.service';
 export class OverdueTaskScheduler {
   private readonly logger = new Logger(OverdueTaskScheduler.name);
 
-  constructor(private readonly taskService: TaskService) {}
+  constructor(
+    private readonly taskService: TaskService,
+    private readonly configService: ConfigService,
+  ) {}
 
   @Cron(CronExpression.EVERY_MINUTE)
   async handleOverdueTasks() {
     try {
+      // Check if scheduler is enabled via configuration
+      const isSchedulerEnabled = this.configService.get<string>('ENABLE_OVERDUE_TASK_SCHEDULER') !== 'false';
+      if (!isSchedulerEnabled) {
+        this.logger.debug('Overdue task scheduler is disabled via configuration');
+        return;
+      }
+
       this.logger.log('Starting overdue task check...');
       
       const overdueTasks = await this.taskService.findOverdueTasks();

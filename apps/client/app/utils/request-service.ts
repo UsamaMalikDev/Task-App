@@ -28,7 +28,7 @@ export const sendRequest = async (
 ) => {
   
   try {
-    const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
+    const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
     const fullUrl = `${BASE_URL}${path}`;
     
     const requestOptions: RequestInit = {

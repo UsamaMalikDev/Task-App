@@ -12,7 +12,7 @@ async function bootstrap() {
   
   // Enable CORS for frontend communication
   app.enableCors({
-    origin: process.env.FRONTEND_URL || 'http://localhost:3001',
+    origin: process.env.FRONTEND_URL || 'http://localhost:3000',
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
@@ -45,6 +45,10 @@ async function bootstrap() {
     // Continue startup even if seeding fails
   }
   
-  await app.listen(process.env.PORT ?? 3000);
+  const port = process.env.PORT ?? 3001;
+  await app.listen(port);
+  
+  console.log(`🚀 Server is running on port ${port}`);
+  console.log(`📡 API endpoints available at: http://localhost:${port}/api`);
 }
 bootstrap();
